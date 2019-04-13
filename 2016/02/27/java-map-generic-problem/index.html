@@ -23,13 +23,13 @@
 <meta property="og:site_name" content="Victor’ Blog">
 <meta property="og:description" content="今天遇到一个神奇的问题. 直接上代码. 1234567//首先有一个泛型比较复杂的Map, 里面套了一个Key泛型为Integer的MapMap&amp;lt;String, Map&amp;lt;Integer, CategoriesContainer&amp;gt;&amp;gt; fieldCategoriesMap;//初始化 复制等操作.//第一个get获取到Key泛型为Integer的Map, 然后在get, 这里为">
 <meta property="og:locale" content="default">
-<meta property="og:image" content="https://www.veevv.com/images//posts/java-map-generic-problem-1.png">
-<meta property="og:image" content="https://www.veevv.com/images//posts/java-map-generic-problem-2.png">
-<meta property="og:updated_time" content="2019-04-13T21:59:58.797Z">
+<meta property="og:image" content="https://veevv.com/images//posts/java-map-generic-problem-1.png">
+<meta property="og:image" content="https://veevv.com/images//posts/java-map-generic-problem-2.png">
+<meta property="og:updated_time" content="2019-04-13T22:14:36.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="一个Map泛型的问题">
 <meta name="twitter:description" content="今天遇到一个神奇的问题. 直接上代码. 1234567//首先有一个泛型比较复杂的Map, 里面套了一个Key泛型为Integer的MapMap&amp;lt;String, Map&amp;lt;Integer, CategoriesContainer&amp;gt;&amp;gt; fieldCategoriesMap;//初始化 复制等操作.//第一个get获取到Key泛型为Integer的Map, 然后在get, 这里为">
-<meta name="twitter:image" content="https://www.veevv.com/images//posts/java-map-generic-problem-1.png">
+<meta name="twitter:image" content="https://veevv.com/images//posts/java-map-generic-problem-1.png">
 
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
@@ -318,8 +318,8 @@
 <p>执行上述代码后, 居然空指针了!! 确认都有值, 绝对不可能, debug一看, 居然<code>.get(3)</code>返回的是null在<code>.getName()</code>肯定空指针了…</p>
 <p>可是为什么呢?</p>
 <p>继续debug检查, 看到如下情况</p>
-<p><img src="https://www.veevv.com/images//posts/java-map-generic-problem-1.png" alt="图片"></p>
-<p><img src="https://www.veevv.com/images//posts/java-map-generic-problem-2.png" alt="图片"></p>
+<p><img src="https://veevv.com/images//posts/java-map-generic-problem-1.png" alt="图片"></p>
+<p><img src="https://veevv.com/images//posts/java-map-generic-problem-2.png" alt="图片"></p>
 <p>卧槽, 牛逼了, 嵌套在里面的Map的泛型明明是Integer, 但是debug里看到key的值居然是<code>char[1]</code> ???</p>
 <p>这尼玛是什么鬼?!?!?!?!?!</p>
 <p>然后第二张图里用<code>get(&quot;3&quot;)</code>, 居然拿出东西来了, 偶滴个神啊, 这是在毁三观吗??????</p>
@@ -347,7 +347,7 @@
         <p><span>本文标题:</span><a href="/2016/02/27/java-map-generic-problem/">一个Map泛型的问题</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">Victor Jones</a></p>
         <p><span>发布时间:</span>2016-02-27, 00:00:00</p>
-        <p><span>最后更新:</span>2019-04-14, 05:59:58</p>
+        <p><span>最后更新:</span>2019-04-14, 06:14:36</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2016/02/27/java-map-generic-problem/" title="一个Map泛型的问题">https://veevv.com/2016/02/27/java-map-generic-problem/</a>
             <span class="copy-path" data-clipboard-text="原文: https://veevv.com/2016/02/27/java-map-generic-problem/　　作者: Victor Jones" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
@@ -471,7 +471,7 @@
         
     </div>
 
-    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/04/13/go-gomybatis-learning-experience/">Go语言的ORM框架GoMybatis的学习经历</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/12/12/how-to-install-tensorflow-on-arm/">如何在arm板(cubieboard)上编译安装tensorflow</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/12/12/g-to-install-tensorflow-on-arm/">如何在arm板(cubieboard)上编译安装tensorflow</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/05/17/how-to-install-mysql5.7-by-yum/">CentOS7如何使用yum安装Mysql5.7</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/03/17/flowable-modeler-integrate/">如何整合Flowable-modeler到自己的项目中</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/06/01/linux-centos-vsftp-configuration/">linux/centos中配置vsftp</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/02/27/java-map-generic-problem/">一个Map泛型的问题</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/01/16/magazine-faq/">深坑浅坑集合</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/30/tomcat-multi-project-start-error/">使用tomcat部署多个项目时, 启动莫名其妙的错, schedulerFactory_Worker-1 memory leak.</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/25/linux-centos-jdk-installation/">linux/centos下安装如何安装JDK</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/25/tomcat-start-error-contextloaderlistener/">使用ContextLoaderListener监听tomcat启动时, tomcat启动报错.</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/10/26/double-eleven-get-coupon/">双十一优惠券 一次性全部领取</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/09/30/mybatis-mapper-xml-reloader/">Mybatis Mapper配置XML文件热加载实现</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/09/23/j2ee-faq/">java常见问题集合</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/09/23/spring-mvc-ajax-json-406/">Spring MVC 使用ajax请求json数据时出现406 Not Acceptable</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/07/27/tomcat-linux-auto-start/">linux中设置tomcat开机启动</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/07/14/common-code-memo/">常用语句备忘</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/07/10/touch.js-baidu-code/">touch.js 百度开源项目.</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/06/26/bootstrap-css/">bootstrap栅格布局样式备忘.</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/06/24/my-first-blog/">我历经百般磨难, 命运各种坎坷的第一篇博文.</a></li></ul>
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/04/13/go-gomybatis-learning-experience/">Go语言的ORM框架GoMybatis的学习经历</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/12/12/how-to-install-tensorflow-on-arm/">如何在arm板(cubieboard)上编译安装tensorflow</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/05/17/how-to-install-mysql5.7-by-yum/">CentOS7如何使用yum安装Mysql5.7</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/03/17/flowable-modeler-integrate/">如何整合Flowable-modeler到自己的项目中</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/06/01/linux-centos-vsftp-configuration/">linux/centos中配置vsftp</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/02/27/java-map-generic-problem/">一个Map泛型的问题</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/01/16/magazine-faq/">深坑浅坑集合</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/30/tomcat-multi-project-start-error/">使用tomcat部署多个项目时, 启动莫名其妙的错, schedulerFactory_Worker-1 memory leak.</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/25/linux-centos-jdk-installation/">linux/centos下安装如何安装JDK</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/25/tomcat-start-error-contextloaderlistener/">使用ContextLoaderListener监听tomcat启动时, tomcat启动报错.</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/10/26/double-eleven-get-coupon/">双十一优惠券 一次性全部领取</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/09/30/mybatis-mapper-xml-reloader/">Mybatis Mapper配置XML文件热加载实现</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/09/23/j2ee-faq/">java常见问题集合</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/09/23/spring-mvc-ajax-json-406/">Spring MVC 使用ajax请求json数据时出现406 Not Acceptable</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/07/27/tomcat-linux-auto-start/">linux中设置tomcat开机启动</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/07/14/common-code-memo/">常用语句备忘</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/07/10/touch.js-baidu-code/">touch.js 百度开源项目.</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/06/26/bootstrap-css/">bootstrap栅格布局样式备忘.</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/06/24/my-first-blog/">我历经百般磨难, 命运各种坎坷的第一篇博文.</a></li></ul>
 
 
 

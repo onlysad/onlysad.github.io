@@ -270,75 +270,6 @@
 </nav>
       <div class="body-wrap">
   
-    <article id="post-tomcat-start-error-contextloaderlistener" class="article article-type-post" itemscope itemprop="blogPost">
-  
-    <div class="article-meta">
-      <a href="/2015/12/25/tomcat-start-error-contextloaderlistener/" class="article-date">
-      <time datetime="2015-12-24T16:00:00.000Z" itemprop="datePublished">2015-12-25</time>
-</a>
-    </div>
-  
-  <div class="article-inner">
-    
-      <input type="hidden" class="isFancy">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2015/12/25/tomcat-start-error-contextloaderlistener/">使用ContextLoaderListener监听tomcat启动时, tomcat启动报错.</a>
-    </h1>
-  
-
-      </header>
-      
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-          
-        <h3 id="啊啊啊啊啊啊啊啊啊啊啊啊啊-折腾一下午啊啊啊啊啊-好想扇死自己啊啊啊啊啊啊啊啊-尼玛好傻逼的错误啊啊啊啊啊啊啊啊啊啊"><a href="#啊啊啊啊啊啊啊啊啊啊啊啊啊-折腾一下午啊啊啊啊啊-好想扇死自己啊啊啊啊啊啊啊啊-尼玛好傻逼的错误啊啊啊啊啊啊啊啊啊啊" class="headerlink" title="啊啊啊啊啊啊啊啊啊啊啊啊啊, 折腾一下午啊啊啊啊啊, 好想扇死自己啊啊啊啊啊啊啊啊, 尼玛好傻逼的错误啊啊啊啊啊啊啊啊啊啊"></a>啊啊啊啊啊啊啊啊啊啊啊啊啊, 折腾一下午啊啊啊啊啊, 好想扇死自己啊啊啊啊啊啊啊啊, 尼玛好傻逼的错误啊啊啊啊啊啊啊啊啊啊</h3><p>下午项目上传服务器, 因为是第一次, 所以连同数据库都得上传. 另外还得安装tomcat和jdk.<br>一番折腾, 全部搞定, 启动.</p>
-<h2 id="尼玛啊-这是神马啊"><a href="#尼玛啊-这是神马啊" class="headerlink" title="尼玛啊, 这是神马啊!!"></a>尼玛啊, 这是神马啊!!</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">25-Dec-2015 19:47:33.314 WARNING [localhost-startStop-2] org.apache.catalina.loader.WebappClassLoaderBase.clearReferencesJdbc The web application [crm] registered the JDBC driver [com.mysql.jdbc.Driver] but failed to unregister it when the web application was stopped. To prevent a memory leak, the JDBC Driver has been forcibly unregistered.</span><br><span class="line">25-Dec-2015 19:47:33.332 WARNING [localhost-startStop-2] org.apache.catalina.loader.WebappClassLoaderBase.clearReferencesThreads The web application [crm] appears to have started a thread named [schedulerFactory_Worker-1] but has failed to stop it. This is very likely to create a memory leak. Stack trace of thread:</span><br><span class="line"> java.lang.Object.wait(Native Method)</span><br><span class="line"> org.quartz.simpl.SimpleThreadPool$WorkerThread.run(SimpleThreadPool.java:519)</span><br><span class="line">25-Dec-2015 19:47:33.339 WARNING [localhost-startStop-2] org.apache.catalina.loader.WebappClassLoaderBase.clearReferencesThreads The web application [crm] appears to have started a thread named [schedulerFactory_Worker-2] but has failed to stop it. This is very likely to create a memory leak. Stack trace of thread:</span><br><span class="line"> java.lang.Object.wait(Native Method)</span><br><span class="line"> org.quartz.simpl.SimpleThreadPool$WorkerThread.run(SimpleThreadPool.java:519)</span><br></pre></td></tr></table></figure>
-<h2 id="tomcat启动就报错-完全启不起来-不对啊-尼玛本地一切正常啊-tomcat和jdk环境和本地一毛一样啊"><a href="#tomcat启动就报错-完全启不起来-不对啊-尼玛本地一切正常啊-tomcat和jdk环境和本地一毛一样啊" class="headerlink" title="tomcat启动就报错 完全启不起来, 不对啊, 尼玛本地一切正常啊, tomcat和jdk环境和本地一毛一样啊!!!!"></a>tomcat启动就报错 完全启不起来, 不对啊, 尼玛本地一切正常啊, tomcat和jdk环境和本地一毛一样啊!!!!</h2><p>于是开始一番长达一下午的折腾. T ^ T, 检查各项配置, 换tomcat, 换jdk, 尼玛明明都是从官网下的啊啊啊啊啊啊啊.</p>
-<p>直到刚刚都还没解决. 之前尝试把ContextLoaderListener监听初始化缓存的代码注掉后, 确实启动起来, 所以尼玛肯定是这里问题.</p>
-<p>可尼玛, 本地都是正常的啊啊啊啊, 没办法, 那就注掉吧, 试试其他的功能, 启动, 登陆, 嗯???????!!!!!!!!!!!!! 神马? 500? 无法访问数据库???  神马情况??</p>
-<p>仔细一看, 数据库连接的ip地址是服务器的外网地址, 然后访问被拒绝. T ^ T, 一万头草泥马呼啸而过啊… 原来jdbc没改, 还是用的本地的, 数据库没有对服务器自己的外网地址做访问授权…</p>
-<p>那之前的问题, 我擦擦擦擦擦啊, ContextLoaderListener监听初始化缓存是要读取数据库的啊啊啊啊啊啊, 卧槽, 原来是这样啊啊啊啊啊 T ^ T</p>
-<p>遂改之, 启动, 哭死啊, 真的正常了啊啊啊. 坑死爹了啊, 这尼玛神马报错啊… 教训啊教训.</p>
-
-      
-    </div>
-    
-    <div class="article-info article-info-index">
-      
-      
-    <div class="article-category tagcloud">
-    <a class="article-category-link" href="/categories/咖啡人生/">咖啡人生</a>
-    </div>
-
-
-      
-    <div class="article-tag tagcloud">
-        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/ContextLoaderListener-启动报错/">ContextLoaderListener 启动报错</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/memory-leak/">memory leak</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/schedulerFactory-Worker-1/">schedulerFactory_Worker-1</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/tomcat-启动报错/">tomcat 启动报错</a></li></ul>
-    </div>
-
-      
-      <div class="clearfix"></div>
-    </div>
-    
-  </div>
-  
-</article>
-
-
-
-
-
-
-
-
-
-  
     <article id="post-double-eleven-get-coupon" class="article article-type-post" itemscope itemprop="blogPost">
   
     <div class="article-meta">
@@ -367,12 +298,12 @@
       
           
         <h2 id="一次领光天猫双11所有优惠卷"><a href="#一次领光天猫双11所有优惠卷" class="headerlink" title="一次领光天猫双11所有优惠卷"></a>一次领光天猫双11所有优惠卷</h2><h2 id="一次领光天猫双11所有优惠卷-1"><a href="#一次领光天猫双11所有优惠卷-1" class="headerlink" title="一次领光天猫双11所有优惠卷"></a>一次领光天猫双11所有优惠卷</h2><h2 id="一次领光天猫双11所有优惠卷-2"><a href="#一次领光天猫双11所有优惠卷-2" class="headerlink" title="一次领光天猫双11所有优惠卷"></a>一次领光天猫双11所有优惠卷</h2><h3 id="重要的要说三次！！！"><a href="#重要的要说三次！！！" class="headerlink" title="重要的要说三次！！！"></a>重要的要说三次！！！</h3><p>方法：<br>首先进入活动页面 <a href="http://www.tmall.com/wow/act/14931/1111" target="_blank" rel="noopener">http://www.tmall.com/wow/act/14931/1111</a> 并且登录成功你的帐号！<br>随便找个地方点击鼠标右键审查元素</p>
-<p><img src="https://www.veevv.com/images/posts/doubleEleven.png" alt="图片"></p>
+<p><img src="https://veevv.com/images/posts/doubleEleven.png" alt="图片"></p>
 <p>然后点击<code>console</code>, 把下面代码复制到指定位置, 最后回车.</p>
-<p><img src="https://www.veevv.com/images/posts/doubleEleven2.png" alt="图片"></p>
+<p><img src="https://veevv.com/images/posts/doubleEleven2.png" alt="图片"></p>
 <figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">(<span class="function"><span class="keyword">function</span>(<span class="params">window, document, undefined</span>) </span>&#123;</span><br><span class="line">    <span class="keyword">var</span> interval = <span class="number">800</span>;</span><br><span class="line">    <span class="keyword">var</span> closeDelay = <span class="number">200</span>;</span><br><span class="line">    <span class="keyword">var</span> index = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">var</span> couponLinks;</span><br><span class="line">    <span class="keyword">var</span> getCoupon = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (index &gt;= couponLinks.length) &#123;</span><br><span class="line">            <span class="built_in">console</span>.log(<span class="string">"领取完毕"</span>);</span><br><span class="line">            <span class="built_in">console</span>.log(<span class="string">"http://veevv.com/"</span>);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">var</span> coponLink = couponLinks[index];</span><br><span class="line">        coponLink.click(); index++;</span><br><span class="line">        <span class="built_in">console</span>.log(<span class="string">"领取 第"</span> + index + <span class="string">" 张"</span>);</span><br><span class="line">        setTimeout(getCoupon, interval);</span><br><span class="line">        setTimeout(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">            <span class="keyword">var</span> close = <span class="built_in">document</span>.querySelector(<span class="string">'.mui-dialog-close'</span>);</span><br><span class="line">            <span class="keyword">if</span> (close != <span class="literal">null</span>) close.click();</span><br><span class="line">        &#125;, closeDelay);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">var</span> _scrollTop = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">var</span> _scrollStep = <span class="built_in">document</span>.documentElement.clientHeight;</span><br><span class="line">    <span class="keyword">var</span> _maxScrollTop = <span class="built_in">document</span>.body.clientHeight - <span class="built_in">document</span>.documentElement.clientHeight;</span><br><span class="line">    <span class="keyword">var</span> autoScrollDown = setInterval(<span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">        _scrollTop += _scrollStep;</span><br><span class="line">        <span class="keyword">if</span> (_scrollTop &gt; _maxScrollTop) &#123;</span><br><span class="line">            clearInterval(autoScrollDown);</span><br><span class="line">            couponLinks = <span class="built_in">document</span>.querySelectorAll(<span class="string">'.mui-act-item-yhqbtn'</span>);</span><br><span class="line">            <span class="built_in">console</span>.log(<span class="string">"总共："</span> + couponLinks.length + <span class="string">"条张优惠券待领取..."</span>);</span><br><span class="line">            getCoupon();</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="built_in">document</span>.body.scrollTop = _scrollTop;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;, <span class="number">500</span>);</span><br><span class="line">&#125;) (<span class="built_in">window</span>, <span class="built_in">document</span>);</span><br></pre></td></tr></table></figure>
 <p>执行完毕后的效果是这样滴.</p>
-<p><img src="https://www.veevv.com/images/posts/doubleEleven3.png" alt="图片"></p>
+<p><img src="https://veevv.com/images/posts/doubleEleven3.png" alt="图片"></p>
 
       
     </div>
@@ -989,12 +920,12 @@
 </ul>
 <p>真的, 我想要把弄博客变成一件很有趣的事.</p>
 <p>最终, 在<a href="https://github.com/" target="_blank" rel="noopener">GitHub</a>, 我得到了我想要的一切, 感谢<a href="https://github.com/" target="_blank" rel="noopener">GitHub</a>, 感谢全天下支撑着<a href="https://github.com/" target="_blank" rel="noopener">GitHub</a>的一只只可爱的程序猿们.</p>
-<p><img src="https://www.veevv.com/images/posts/firstBlog.png" alt="图片"></p>
+<p><img src="https://veevv.com/images/posts/firstBlog.png" alt="图片"></p>
 <p>现在, 我可以开始我的博客之旅了, 开始积累开始沉淀, 帮助自己的同时, 如果也能偶尔帮助到别人, 那就是大团圆结局啦. 目前先开设三个分类:</p>
 <ul>
-<li><a href="http://www.veevv.com/blog/magazine/" target="_blank" rel="noopener">杂七杂八</a> - 一些零零碎碎的东西</li>
-<li><a href="http://www.veevv.com/blog/activiti/" target="_blank" rel="noopener">activiti</a> - java开源工作流的东西</li>
-<li><a href="http://www.veevv.com/blog/javalife/" target="_blank" rel="noopener">咖啡人生</a> - java老本行, 一些经验或者备忘的东西.</li>
+<li><a href="https://veevv.com/blog/magazine/">杂七杂八</a> - 一些零零碎碎的东西</li>
+<li><a href="https://veevv.com/blog/activiti/">activiti</a> - java开源工作流的东西</li>
+<li><a href="https://veevv.com/blog/javalife/">咖啡人生</a> - java老本行, 一些经验或者备忘的东西.</li>
 </ul>
 <p>最后再次感觉这个云时代, 感谢所有为之开源世界贡献者或贡献过的人们. 让我们一起, 让开源世界更加精彩.</p>
 
