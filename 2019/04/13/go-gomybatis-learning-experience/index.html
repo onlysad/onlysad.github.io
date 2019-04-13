@@ -15,22 +15,22 @@
 
 
 
-<meta name="description" content="前言最近开始学习Goole爸爸的Go语言，经过两天的学习，准备尝试搭建一个Web开发框架，折腾到数据库这一块时，了解到Go的orm框架目前用的最多的是xorm，是一种类Hibernate的orm框架，做Java的相信都感受过被Hibernate统治的恐惧，生成SQL的代码都写在Java类里，导致后期优化SQL极其痛苦。不过万幸的是，经过搜索发现了一个名叫GoMyBatis的orm框架，相信大家从名">
+<meta name="description" content="前言最近开始学习Google爸爸的Go语言，经过两天的学习，准备尝试搭建一个Web开发框架，折腾到数据库这一块时，了解到Go的orm框架目前用的最多的是xorm，是一种类Hibernate的orm框架，做Java的相信都感受过被Hibernate统治的恐惧，生成SQL的代码都写在Java类里，导致后期优化SQL极其痛苦。不过万幸的是，经过搜索发现了一个名叫GoMyBatis的orm框架，相信大家从">
 <meta name="keywords" content="go,gomybatis">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Go语言的ORM框架GoMybatis的学习经历">
 <meta property="og:url" content="http://veevv.com/2019/04/13/go-gomybatis-learning-experience/index.html">
 <meta property="og:site_name" content="Victor’ Blog">
-<meta property="og:description" content="前言最近开始学习Goole爸爸的Go语言，经过两天的学习，准备尝试搭建一个Web开发框架，折腾到数据库这一块时，了解到Go的orm框架目前用的最多的是xorm，是一种类Hibernate的orm框架，做Java的相信都感受过被Hibernate统治的恐惧，生成SQL的代码都写在Java类里，导致后期优化SQL极其痛苦。不过万幸的是，经过搜索发现了一个名叫GoMyBatis的orm框架，相信大家从名">
+<meta property="og:description" content="前言最近开始学习Google爸爸的Go语言，经过两天的学习，准备尝试搭建一个Web开发框架，折腾到数据库这一块时，了解到Go的orm框架目前用的最多的是xorm，是一种类Hibernate的orm框架，做Java的相信都感受过被Hibernate统治的恐惧，生成SQL的代码都写在Java类里，导致后期优化SQL极其痛苦。不过万幸的是，经过搜索发现了一个名叫GoMyBatis的orm框架，相信大家从">
 <meta property="og:locale" content="default">
 <meta property="og:image" content="http://www.veevv.com/images/posts/gomybatis1.png">
 <meta property="og:image" content="http://www.veevv.com/images/posts/gomybatis2.png">
 <meta property="og:image" content="http://www.veevv.com/images/posts/gomybatis3.png">
 <meta property="og:image" content="http://www.veevv.com/images/posts/gomybatis4.png">
-<meta property="og:updated_time" content="2019-04-13T20:43:26.543Z">
+<meta property="og:updated_time" content="2019-04-13T20:49:37.030Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Go语言的ORM框架GoMybatis的学习经历">
-<meta name="twitter:description" content="前言最近开始学习Goole爸爸的Go语言，经过两天的学习，准备尝试搭建一个Web开发框架，折腾到数据库这一块时，了解到Go的orm框架目前用的最多的是xorm，是一种类Hibernate的orm框架，做Java的相信都感受过被Hibernate统治的恐惧，生成SQL的代码都写在Java类里，导致后期优化SQL极其痛苦。不过万幸的是，经过搜索发现了一个名叫GoMyBatis的orm框架，相信大家从名">
+<meta name="twitter:description" content="前言最近开始学习Google爸爸的Go语言，经过两天的学习，准备尝试搭建一个Web开发框架，折腾到数据库这一块时，了解到Go的orm框架目前用的最多的是xorm，是一种类Hibernate的orm框架，做Java的相信都感受过被Hibernate统治的恐惧，生成SQL的代码都写在Java类里，导致后期优化SQL极其痛苦。不过万幸的是，经过搜索发现了一个名叫GoMyBatis的orm框架，相信大家从">
 <meta name="twitter:image" content="http://www.veevv.com/images/posts/gomybatis1.png">
 
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -315,7 +315,7 @@
     <div class="article-entry" itemprop="articleBody">
       
           
-        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>最近开始学习Goole爸爸的Go语言，经过两天的学习，准备尝试搭建一个Web开发框架，折腾到数据库这一块时，了解到Go的orm框架目前用的最多的是xorm，是一种类Hibernate的orm框架，做Java的相信都感受过被Hibernate统治的恐惧，生成SQL的代码都写在Java类里，导致后期优化SQL极其痛苦。不过万幸的是，经过搜索发现了一个名叫GoMyBatis的orm框架，相信大家从名字上看就已经了然了，这是一个类似于Mybatis的orm框架，进入Github自己查看后，了解到在XML解析上已经最大限度上兼容了Mybatis的语法结构，这对无论是已有的项目做迁移，还是新的项目开发都是极大的助力。</p>
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>最近开始学习Google爸爸的Go语言，经过两天的学习，准备尝试搭建一个Web开发框架，折腾到数据库这一块时，了解到Go的orm框架目前用的最多的是xorm，是一种类Hibernate的orm框架，做Java的相信都感受过被Hibernate统治的恐惧，生成SQL的代码都写在Java类里，导致后期优化SQL极其痛苦。不过万幸的是，经过搜索发现了一个名叫GoMyBatis的orm框架，相信大家从名字上看就已经了然了，这是一个类似于Mybatis的orm框架，进入Github自己查看后，了解到在XML解析上已经最大限度上兼容了Mybatis的语法结构，这对无论是已有的项目做迁移，还是新的项目开发都是极大的助力。</p>
 <h2 id="开始正题"><a href="#开始正题" class="headerlink" title="开始正题"></a>开始正题</h2><h3 id="第一步-安装"><a href="#第一步-安装" class="headerlink" title="第一步 安装"></a>第一步 安装</h3><p><a href="https://zhuxiujia.github.io/gomybatis.io/info.html" target="_blank" rel="noopener">官网传送门</a><br><a href="https://github.com/zhuxiujia/GoMybatis" target="_blank" rel="noopener">GitHub传送门</a></p>
 <p>命令行安装方式：</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">go get github.com/zhuxiujia/GoMybatis</span><br><span class="line">go get github.com/go-sql-driver/mysql</span><br></pre></td></tr></table></figure>
@@ -390,7 +390,7 @@
         <p><span>本文标题:</span><a href="/2019/04/13/go-gomybatis-learning-experience/">Go语言的ORM框架GoMybatis的学习经历</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">Victor Jones</a></p>
         <p><span>发布时间:</span>2019-04-13, 23:21:00</p>
-        <p><span>最后更新:</span>2019-04-14, 04:43:26</p>
+        <p><span>最后更新:</span>2019-04-14, 04:49:37</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2019/04/13/go-gomybatis-learning-experience/" title="Go语言的ORM框架GoMybatis的学习经历">http://veevv.com/2019/04/13/go-gomybatis-learning-experience/</a>
             <span class="copy-path" data-clipboard-text="原文: http://veevv.com/2019/04/13/go-gomybatis-learning-experience/　　作者: Victor Jones" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
