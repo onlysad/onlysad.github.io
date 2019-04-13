@@ -23,7 +23,7 @@
 <meta property="og:site_name" content="Victor’ Blog">
 <meta property="og:description" content="历经三天四夜，睡眠不超过10小时，终于把tensorflow在arm架构cpu的cubieboard上成功run起来了。不得不吐槽cubieboard的资料实在太少，搜出来的相关资料全是树莓派的，但是还是给予了我不少启发作用。 作为全(zhen)宇(bu)宙(yao)第(B)一(lian)个成功把tensorflow移植到cubieboard的人(google翻100页都搜索不到)，特此记录全过程">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2017-12-11T23:14:59.000Z">
+<meta property="og:updated_time" content="2019-04-13T23:23:59.578Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="如何在arm板(cubieboard)上编译安装tensorflow">
 <meta name="twitter:description" content="历经三天四夜，睡眠不超过10小时，终于把tensorflow在arm架构cpu的cubieboard上成功run起来了。不得不吐槽cubieboard的资料实在太少，搜出来的相关资料全是树莓派的，但是还是给予了我不少启发作用。 作为全(zhen)宇(bu)宙(yao)第(B)一(lian)个成功把tensorflow移植到cubieboard的人(google翻100页都搜索不到)，特此记录全过程">
@@ -314,8 +314,7 @@
 <p>作为全(zhen)宇(bu)宙(yao)第(B)一(lian)个成功把<code>tensorflow</code>移植到<code>cubieboard</code>的人(google翻100页都搜索不到)，特此记录全过程，方便后来者乘凉。</p>
 <h2 id="开始正题"><a href="#开始正题" class="headerlink" title="开始正题"></a>开始正题</h2><h3 id="第一步-准备工作"><a href="#第一步-准备工作" class="headerlink" title="第一步 准备工作"></a>第一步 准备工作</h3><p>如果没有JDK8，先安装JDK8，编译<code>tensorflow</code>需要用到<code>bazel</code>，而<code>bazel</code>依赖JDK8(必须是JDK8)，必须配置环境变量。编辑完<code>/etc/profile</code>文件后，记得<code>source /etc/profile</code>，让环境变量生效。</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">export</span> JAVA_HOME=<span class="string">"/home/lib/jdk1.8.0_151"</span></span><br><span class="line"><span class="built_in">export</span> PATH=<span class="string">"<span class="variable">$PATH</span>:<span class="variable">$JAVA_HOME</span>/bin"</span></span><br><span class="line"><span class="built_in">export</span> JRE_HOME=<span class="string">"<span class="variable">$JAVA_HOME</span>/jre"</span></span><br><span class="line"><span class="built_in">export</span> CLASSPATH=<span class="string">".:<span class="variable">$JAVA_HOME</span>/lib:<span class="variable">$JRE_HOME</span>/lib"</span></span><br></pre></td></tr></table></figure>
-<p>接着安装<code>bazel</code>，我使用的是版本是0.6.1，是否选用更高版本自己看着办，跳坑我不管。<br>这里有个坑，吐槽<code>bazel</code>打包人员，居然没有在外层目录打包，<code>unzip</code>出来一堆东西，害我又去删掉。所以先<code>mkdir</code></p>
-<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">mkdir bazel-0.6.1</span><br><span class="line">mv bazel-0.6.1-dist.zip ./bazel-0.6.1</span><br><span class="line"><span class="built_in">cd</span> bazel-0.6.1</span><br><span class="line">unzip bazel-0.6.1-dist.zip</span><br></pre></td></tr></table></figure>
+<p>接着安装<code>bazel</code>，我使用的是版本是0.6.1，是否选用更高版本自己看着办，跳坑我不管。<br>这里有个坑，吐槽<code>bazel</code>打包人员，居然没有在外层目录打包，<code>unzip</code>出来一堆东西，害我又去删掉。所以先<code>mkdir</code><br><a id="more"></a><br><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">mkdir bazel-0.6.1</span><br><span class="line">mv bazel-0.6.1-dist.zip ./bazel-0.6.1</span><br><span class="line"><span class="built_in">cd</span> bazel-0.6.1</span><br><span class="line">unzip bazel-0.6.1-dist.zip</span><br></pre></td></tr></table></figure></p>
 <p>解压完成后，别急着执行<code>compile.sh</code>，先<code>vim scripts/bootstrap/compile.sh</code>文件，将第<code>122行</code>修改成</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">run <span class="string">"<span class="variable">$&#123;JAVAC&#125;</span>"</span> -J-Xms256m -J-Xmx384m -classpath <span class="string">"<span class="variable">$&#123;classpath&#125;</span>"</span> -sourcepath <span class="string">"<span class="variable">$&#123;sourcepath&#125;</span>"</span></span><br></pre></td></tr></table></figure>
 <p>就是在这行中间加入<code>-J-Xms256m -J-Xmx384m</code>两个参数，否则执行<code>compile.sh</code>时Java会内存溢出。<br>现在放心大胆的<code>./compile.sh</code>吧。<br>哦，对了，<code>compile.sh</code>中用到了<code>zip</code>命令，没有的话<code>apt-get install zip</code><br>完成之后将生成的文件copy到<code>/usr/local/bin</code>去</p>
@@ -384,7 +383,7 @@
         <p><span>本文标题:</span><a href="/2017/12/12/how-to-install-tensorflow-on-arm/">如何在arm板(cubieboard)上编译安装tensorflow</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">Victor Jones</a></p>
         <p><span>发布时间:</span>2017-12-12, 06:50:00</p>
-        <p><span>最后更新:</span>2017-12-12, 07:14:59</p>
+        <p><span>最后更新:</span>2019-04-14, 07:23:59</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2017/12/12/how-to-install-tensorflow-on-arm/" title="如何在arm板(cubieboard)上编译安装tensorflow">https://veevv.com/2017/12/12/how-to-install-tensorflow-on-arm/</a>
             <span class="copy-path" data-clipboard-text="原文: https://veevv.com/2017/12/12/how-to-install-tensorflow-on-arm/　　作者: Victor Jones" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>

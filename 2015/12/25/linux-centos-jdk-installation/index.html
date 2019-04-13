@@ -23,7 +23,7 @@
 <meta property="og:site_name" content="Victor’ Blog">
 <meta property="og:description" content="首先到oracle下载想要的jdk版本上传到服务器http://www.oracle.com/technetwork/java/javase/downloads/index.html 1234567tar zxvf jdk.tar.gz //解压vim /etc/profile //编辑该文件, 修改环境变量.export JAVA_HOME=/usr/local/jdk1.Xexport CLA">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2016-02-27T08:31:22.000Z">
+<meta property="og:updated_time" content="2019-04-13T23:14:47.817Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="linux&#x2F;centos下安装如何安装JDK">
 <meta name="twitter:description" content="首先到oracle下载想要的jdk版本上传到服务器http://www.oracle.com/technetwork/java/javase/downloads/index.html 1234567tar zxvf jdk.tar.gz //解压vim /etc/profile //编辑该文件, 修改环境变量.export JAVA_HOME=/usr/local/jdk1.Xexport CLA">
@@ -314,6 +314,7 @@
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">tar zxvf jdk.tar.gz //解压</span><br><span class="line"></span><br><span class="line">vim /etc/profile //编辑该文件, 修改环境变量.</span><br><span class="line"></span><br><span class="line"><span class="built_in">export</span> JAVA_HOME=/usr/<span class="built_in">local</span>/jdk1.X</span><br><span class="line"><span class="built_in">export</span> CLASSPATH=.:<span class="variable">$JAVA_HOME</span>/lib/dt.jar:<span class="variable">$JAVA_HOME</span>/lib/tools.jar</span><br><span class="line"><span class="built_in">export</span> PATH=<span class="variable">$JAVA_HOME</span>/bin:<span class="variable">$PATH</span></span><br></pre></td></tr></table></figure>
 <p>搞定收工, 安全起见, 查看一下当前jdk版本.</p>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java -version</span><br></pre></td></tr></table></figure>
+<a id="more"></a>
 <p>java version “1.8.0_65”<br>Java(TM) SE Runtime Environment (build 1.8.0_65-b17)<br>Java HotSpot(TM) 64-Bit Server VM (build 25.65-b01, mixed mode)</p>
 <p>大功告成.</p>
 
@@ -327,7 +328,7 @@
         <p><span>本文标题:</span><a href="/2015/12/25/linux-centos-jdk-installation/">linux/centos下安装如何安装JDK</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">Victor Jones</a></p>
         <p><span>发布时间:</span>2015-12-25, 00:00:00</p>
-        <p><span>最后更新:</span>2016-02-27, 16:31:22</p>
+        <p><span>最后更新:</span>2019-04-14, 07:14:47</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2015/12/25/linux-centos-jdk-installation/" title="linux/centos下安装如何安装JDK">https://veevv.com/2015/12/25/linux-centos-jdk-installation/</a>
             <span class="copy-path" data-clipboard-text="原文: https://veevv.com/2015/12/25/linux-centos-jdk-installation/　　作者: Victor Jones" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>

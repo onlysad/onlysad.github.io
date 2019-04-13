@@ -23,7 +23,7 @@
 <meta property="og:site_name" content="Victor’ Blog">
 <meta property="og:description" content="今天又遇到一个之前解决过的问题, 但是没有记录而忘记了, 又坑了自己俩小时. 实在该打.赶紧记下来.Spring mvc json请求时返回406错误 错误原因有以下几种 忘记加@ResponseBody注解 没有引入json相关实现包, jackson、fastjson等. jackson、fastjson和Spring mvc整合方式不一样, 方式错误.  如果是fastjson必须在mvc配">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2016-03-01T06:10:58.000Z">
+<meta property="og:updated_time" content="2019-04-13T23:16:02.015Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Spring MVC 使用ajax请求json数据时出现406 Not Acceptable">
 <meta name="twitter:description" content="今天又遇到一个之前解决过的问题, 但是没有记录而忘记了, 又坑了自己俩小时. 实在该打.赶紧记下来.Spring mvc json请求时返回406错误 错误原因有以下几种 忘记加@ResponseBody注解 没有引入json相关实现包, jackson、fastjson等. jackson、fastjson和Spring mvc整合方式不一样, 方式错误.  如果是fastjson必须在mvc配">
@@ -318,6 +318,7 @@
 </ul>
 <p>如果是fastjson必须在mvc配置文件中增加</p>
 <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">class</span>=<span class="string">"org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"messageConverters"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">list</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">bean</span> <span class="attr">class</span>=<span class="string">"com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter"</span>&gt;</span><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">list</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<a id="more"></a>
 <p>另外必须去掉<code>&lt;mvc:annotation-driven /&gt;</code> 上述配置用于取代此配置. 此方法用于3.0.X的Spring版本.</p>
 <h1 id="千万注意-不能使用上述方法"><a href="#千万注意-不能使用上述方法" class="headerlink" title="千万注意 不能使用上述方法!"></a>千万注意 不能使用上述方法!</h1><p>使用此方法直接初始化<code>AnnotationMethodHandlerAdapter</code>, 会导致<code>webBindingInitializer</code>等属性为空, 从而未来可能引发很多不可预知的问题.<br>例如<code>webBindingInitializer</code>为空, 就会导致<code>conversionService</code>为空, 从而导致页面传值时转换失效, 比如String to Date报错.<br>即使加了<code>@DateTimeFormat</code>注解也无效.</p>
 <p>如果Spring版本为3.1及以上版本, 则可以用一下方式解决.</p>
@@ -334,7 +335,7 @@
         <p><span>本文标题:</span><a href="/2015/09/23/spring-mvc-ajax-json-406/">Spring MVC 使用ajax请求json数据时出现406 Not Acceptable</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">Victor Jones</a></p>
         <p><span>发布时间:</span>2015-09-23, 00:00:00</p>
-        <p><span>最后更新:</span>2016-03-01, 14:10:58</p>
+        <p><span>最后更新:</span>2019-04-14, 07:16:02</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2015/09/23/spring-mvc-ajax-json-406/" title="Spring MVC 使用ajax请求json数据时出现406 Not Acceptable">https://veevv.com/2015/09/23/spring-mvc-ajax-json-406/</a>
             <span class="copy-path" data-clipboard-text="原文: https://veevv.com/2015/09/23/spring-mvc-ajax-json-406/　　作者: Victor Jones" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>

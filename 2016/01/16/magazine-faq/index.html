@@ -23,7 +23,7 @@
 <meta property="og:site_name" content="Victor’ Blog">
 <meta property="og:description" content="2016年第一篇博客, HiaHiaHia. mysql新版5.7windows 64位解压版安装, 使用常规办法安装后启动失败. 需要在安装前执行一下命令 1mysqld --initialize-insecure --user=mysql 对了, 再提一嘴, 环境变量不要忘. 另外win8安装的时候会有很傻逼的Bug, 例如: E:\tools\mysql 这种路径包含了\t这种表示转义符或制">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2016-03-01T06:10:44.000Z">
+<meta property="og:updated_time" content="2019-04-13T23:20:26.335Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="深坑浅坑集合">
 <meta name="twitter:description" content="2016年第一篇博客, HiaHiaHia. mysql新版5.7windows 64位解压版安装, 使用常规办法安装后启动失败. 需要在安装前执行一下命令 1mysqld --initialize-insecure --user=mysql 对了, 再提一嘴, 环境变量不要忘. 另外win8安装的时候会有很傻逼的Bug, 例如: E:\tools\mysql 这种路径包含了\t这种表示转义符或制">
@@ -316,7 +316,8 @@
 <p>对了, 再提一嘴, 环境变量不要忘.</p>
 <p>另外win8安装的时候会有很傻逼的Bug, 例如: <code>E:\tools\mysql</code> 这种路径包含了<code>\t</code>这种表示转义符或制表符.</p>
 <p>类似这样的地址被你配置在了<code>my.ini</code>中, 那么恭喜你中招, 安装会报错, 需要改成<code>E:\\tools\\mysql</code>.</p>
-<h2 id="js"><a href="#js" class="headerlink" title="js"></a>js</h2><p>js里使用<code>jquery</code>发送<code>ajax</code>请求且返回值为<code>json</code>的时候, 切记返回的<code>json</code>里的<code>key</code>不可以是<code>int</code>.</p>
+<h2 id="js"><a href="#js" class="headerlink" title="js"></a>js</h2><a id="more"></a>
+<p>js里使用<code>jquery</code>发送<code>ajax</code>请求且返回值为<code>json</code>的时候, 切记返回的<code>json</code>里的<code>key</code>不可以是<code>int</code>.</p>
 <p>如果一定要是数字, 须转换为<code>String</code>类型.</p>
 <p>如果<code>key</code>为<code>int</code>的话, 从浏览器debug工具中可以看到请求成功, 状态<code>200</code>, 但并没有进<code>success</code>方法.</p>
 <p>在<code>$.ajax</code>里加上<code>error</code>方法后, 即可看到进入了<code>error</code>方法, 且报错为<code>parsererror</code>.</p>
@@ -331,7 +332,7 @@
         <p><span>本文标题:</span><a href="/2016/01/16/magazine-faq/">深坑浅坑集合</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">Victor Jones</a></p>
         <p><span>发布时间:</span>2016-01-16, 00:00:00</p>
-        <p><span>最后更新:</span>2016-03-01, 14:10:44</p>
+        <p><span>最后更新:</span>2019-04-14, 07:20:26</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2016/01/16/magazine-faq/" title="深坑浅坑集合">https://veevv.com/2016/01/16/magazine-faq/</a>
             <span class="copy-path" data-clipboard-text="原文: https://veevv.com/2016/01/16/magazine-faq/　　作者: Victor Jones" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
