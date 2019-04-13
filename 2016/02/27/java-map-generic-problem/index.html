@@ -19,17 +19,17 @@
 <meta name="keywords" content="Map泛型失效,Map泛型变了">
 <meta property="og:type" content="article">
 <meta property="og:title" content="一个Map泛型的问题">
-<meta property="og:url" content="http://veevv.com/2016/02/27/java-map-generic-problem/index.html">
+<meta property="og:url" content="https://veevv.com/2016/02/27/java-map-generic-problem/index.html">
 <meta property="og:site_name" content="Victor’ Blog">
 <meta property="og:description" content="今天遇到一个神奇的问题. 直接上代码. 1234567//首先有一个泛型比较复杂的Map, 里面套了一个Key泛型为Integer的MapMap&amp;lt;String, Map&amp;lt;Integer, CategoriesContainer&amp;gt;&amp;gt; fieldCategoriesMap;//初始化 复制等操作.//第一个get获取到Key泛型为Integer的Map, 然后在get, 这里为">
 <meta property="og:locale" content="default">
-<meta property="og:image" content="http://www.veevv.com/images//posts/java-map-generic-problem-1.png">
-<meta property="og:image" content="http://www.veevv.com/images//posts/java-map-generic-problem-2.png">
-<meta property="og:updated_time" content="2016-02-27T08:34:54.000Z">
+<meta property="og:image" content="https://www.veevv.com/images//posts/java-map-generic-problem-1.png">
+<meta property="og:image" content="https://www.veevv.com/images//posts/java-map-generic-problem-2.png">
+<meta property="og:updated_time" content="2019-04-13T21:59:58.797Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="一个Map泛型的问题">
 <meta name="twitter:description" content="今天遇到一个神奇的问题. 直接上代码. 1234567//首先有一个泛型比较复杂的Map, 里面套了一个Key泛型为Integer的MapMap&amp;lt;String, Map&amp;lt;Integer, CategoriesContainer&amp;gt;&amp;gt; fieldCategoriesMap;//初始化 复制等操作.//第一个get获取到Key泛型为Integer的Map, 然后在get, 这里为">
-<meta name="twitter:image" content="http://www.veevv.com/images//posts/java-map-generic-problem-1.png">
+<meta name="twitter:image" content="https://www.veevv.com/images//posts/java-map-generic-problem-1.png">
 
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
@@ -318,8 +318,8 @@
 <p>执行上述代码后, 居然空指针了!! 确认都有值, 绝对不可能, debug一看, 居然<code>.get(3)</code>返回的是null在<code>.getName()</code>肯定空指针了…</p>
 <p>可是为什么呢?</p>
 <p>继续debug检查, 看到如下情况</p>
-<p><img src="http://www.veevv.com/images//posts/java-map-generic-problem-1.png" alt="图片"></p>
-<p><img src="http://www.veevv.com/images//posts/java-map-generic-problem-2.png" alt="图片"></p>
+<p><img src="https://www.veevv.com/images//posts/java-map-generic-problem-1.png" alt="图片"></p>
+<p><img src="https://www.veevv.com/images//posts/java-map-generic-problem-2.png" alt="图片"></p>
 <p>卧槽, 牛逼了, 嵌套在里面的Map的泛型明明是Integer, 但是debug里看到key的值居然是<code>char[1]</code> ???</p>
 <p>这尼玛是什么鬼?!?!?!?!?!</p>
 <p>然后第二张图里用<code>get(&quot;3&quot;)</code>, 居然拿出东西来了, 偶滴个神啊, 这是在毁三观吗??????</p>
@@ -347,10 +347,10 @@
         <p><span>本文标题:</span><a href="/2016/02/27/java-map-generic-problem/">一个Map泛型的问题</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">Victor Jones</a></p>
         <p><span>发布时间:</span>2016-02-27, 00:00:00</p>
-        <p><span>最后更新:</span>2016-02-27, 16:34:54</p>
+        <p><span>最后更新:</span>2019-04-14, 05:59:58</p>
         <p>
-            <span>原始链接:</span><a class="post-url" href="/2016/02/27/java-map-generic-problem/" title="一个Map泛型的问题">http://veevv.com/2016/02/27/java-map-generic-problem/</a>
-            <span class="copy-path" data-clipboard-text="原文: http://veevv.com/2016/02/27/java-map-generic-problem/　　作者: Victor Jones" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <span>原始链接:</span><a class="post-url" href="/2016/02/27/java-map-generic-problem/" title="一个Map泛型的问题">https://veevv.com/2016/02/27/java-map-generic-problem/</a>
+            <span class="copy-path" data-clipboard-text="原文: https://veevv.com/2016/02/27/java-map-generic-problem/　　作者: Victor Jones" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
             <script> var clipboard = new Clipboard('.copy-path'); </script>
         </p>
         <p>
