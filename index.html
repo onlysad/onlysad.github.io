@@ -644,8 +644,7 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//首先有一个泛型比较复杂的Map, 里面套了一个Key泛型为Integer的Map</span></span><br><span class="line">Map&lt;String, Map&lt;Integer, CategoriesContainer&gt;&gt; fieldCategoriesMap;</span><br><span class="line"></span><br><span class="line"><span class="comment">//初始化 复制等操作.</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//第一个get获取到Key泛型为Integer的Map, 然后在get, 这里为了讲述方便直接传入一个常量3,</span></span><br><span class="line">fieldCategoriesMap.get(<span class="string">"xxxxx"</span>).get(<span class="number">3</span>).getName())</span><br></pre></td></tr></table></figure>
 <p>执行上述代码后, 居然空指针了!! 确认都有值, 绝对不可能, debug一看, 居然<code>.get(3)</code>返回的是null在<code>.getName()</code>肯定空指针了…</p>
 <p>可是为什么呢?</p>
-<p>继续debug检查, 看到如下情况</p>
-<p><img src="https://veevv.com/images//posts/java-map-generic-problem-1.png" alt="图片"><br>
+<p>继续debug检查, 看到如下情况<br>
           
       
     </p></div>
