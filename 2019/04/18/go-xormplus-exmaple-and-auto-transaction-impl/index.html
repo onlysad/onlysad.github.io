@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<meta name="author" content="Victor Jones">
+
+
+
+<meta name="description" content="前言前几天开始寻找适合自己的ORM框架, 因为自己是本命Java, Mybatis用了十年了, 就尝试搜索XMLMqpper风格的XML, 找到了GoMybatis, 经过两天的学习, 发现GoMybatis在事务方面的表现确实不尽人意, 所有事务都必须纯手工操作并且不支持嵌套事务, 这导致在数据操作层的功能代码将变得非常冗长且难以阅读, 所以我不得不重新寻找, 终于我找到了xorm plus,">
+<meta name="keywords" content="go orm,xorm xormplus,go xorm 事务托管">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Go语言ORM框架XORM上手实战及全自动事务托管实现(类似Spring)">
+<meta property="og:url" content="https://veevv.com/2019/04/18/go-xormplus-exmaple-and-auto-transaction-impl/index.html">
+<meta property="og:site_name" content="Victor’ Blog">
+<meta property="og:description" content="前言前几天开始寻找适合自己的ORM框架, 因为自己是本命Java, Mybatis用了十年了, 就尝试搜索XMLMqpper风格的XML, 找到了GoMybatis, 经过两天的学习, 发现GoMybatis在事务方面的表现确实不尽人意, 所有事务都必须纯手工操作并且不支持嵌套事务, 这导致在数据操作层的功能代码将变得非常冗长且难以阅读, 所以我不得不重新寻找, 终于我找到了xorm plus,">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-04-19T01:11:57.955Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Go语言ORM框架XORM上手实战及全自动事务托管实现(类似Spring)">
+<meta name="twitter:description" content="前言前几天开始寻找适合自己的ORM框架, 因为自己是本命Java, Mybatis用了十年了, 就尝试搜索XMLMqpper风格的XML, 找到了GoMybatis, 经过两天的学习, 发现GoMybatis在事务方面的表现确实不尽人意, 所有事务都必须纯手工操作并且不支持嵌套事务, 这导致在数据操作层的功能代码将变得非常冗长且难以阅读, 所以我不得不重新寻找, 终于我找到了xorm plus,">
+
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+
+    <link rel="alternative" href="/atom.xml" title="Victor’ Blog" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/favicon.png">
+
+
+
+    <link href="//lib.baomitu.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//lib.baomitu.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//lib.baomitu.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//lib.baomitu.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>Go语言ORM框架XORM上手实战及全自动事务托管实现(类似Spring) | Victor’ Blog</title>
+
+<script src="//lib.baomitu.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//lib.baomitu.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        open_in_new: false,
+        fancybox_js: "//lib.baomitu.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//lib.baomitu.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: false
+    };
+</script>
+
+
+
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//lib.baomitu.com/jqueryui/1.10.4/jquery-ui.min.js", "//lib.baomitu.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+
+</head></html>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="https://en.gravatar.com/avatar/d8feb2f92e88467381204ad8ce70e97b?s=150" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">Victor Jones</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">一只小小Coder在自说自话</p>
+        
+
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签云</a></li>
+                        
+                            <li><a href="javascript:$('.tips-inner li:last').trigger('click')">关于我</a></li>
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="http://mail.qq.com/cgi-bin/qm_share?t=qm_mailme&email=v@veevv.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" href="#" title="GitHub"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/ajax-parsererror/">$.ajax parsererror</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/406-Not-Acceptable/">406 Not Acceptable</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ContextLoaderListener-启动报错/">ContextLoaderListener 启动报错</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JDK-安装/">JDK 安装</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Map泛型变了/">Map泛型变了</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Map泛型失效/">Map泛型失效</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SpringMVC-406/">SpringMVC 406</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/bootstrap/">bootstrap</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/centos/">centos</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/centos-jdk安装/">centos jdk安装</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/col-xl/">col-xl</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/flowable-modeler/">flowable-modeler</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/go-orm/">go orm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/go-xorm-事务托管/">go xorm 事务托管</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/gomybatis/">gomybatis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/j2ee/">j2ee</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/j2ee-faq/">j2ee faq</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/java/">java</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/jquery/">jquery</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/js/">js</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/linux/">linux</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/linux-JDK安装/">linux JDK安装</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mapper-热加载/">mapper 热加载</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/memory-leak/">memory leak</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mybatis/">mybatis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mybatis-热加载/">mybatis 热加载</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql5-8-zip安装/">mysql5.8 zip安装</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql5-8-解压版安装/">mysql5.8 解压版安装</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql5-8zip安装/">mysql5.8zip安装</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql5-8解压版安装/">mysql5.8解压版安装</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql启动失败/">mysql启动失败</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql自动备份/">mysql自动备份</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/schedulerFactory-Worker-1/">schedulerFactory_Worker-1</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/selinux/">selinux</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/spring/">spring</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/spring-mvc-json-406/">spring mvc json 406</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tomcat/">tomcat</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tomcat-启动报错/">tomcat 启动报错</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tomcat-多项目-启动报错/">tomcat 多项目 启动报错</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tomcat启动报错/">tomcat启动报错</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tomcat多项目启动报错/">tomcat多项目启动报错</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/touch/">touch</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/touch-js/">touch.js</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/vsftp/">vsftp</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/xorm-xormplus/">xorm xormplus</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/yum安装Mysql5-7/">yum安装Mysql5.7</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/双十一/">双十一</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/双十一优惠券/">双十一优惠券</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/双十一优惠卷/">双十一优惠卷</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/布局/">布局</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/开启启动/">开启启动</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/栅格/">栅格</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/编译tensorflow-On-Arm/">编译tensorflow On Arm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/自动启动/">自动启动</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://hexo.io">Hexo</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://pages.github.com/">GitHub</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="http://moxfive.xyz/">MOxFIVE</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">一只低调的小程序猿, 10年+Java相关开发经验, 6年+项目及团队管理经验, 其它擅长语言HTML(HTML4/5)、SQL、JavaScript、Python、GoLang, 拥有强大的自驱动力和学习能力, 乐于迎接挑战且善于完成挑战。</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">Victor Jones</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="https://en.gravatar.com/avatar/d8feb2f92e88467381204ad8ce70e97b?s=150" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">Victor Jones</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">一只小小Coder在自说自话</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签云</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="http://mail.qq.com/cgi-bin/qm_share?t=qm_mailme&email=v@veevv.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" href="#" title="GitHub"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我">
+</nav>
+      <div class="body-wrap"><article id="post-go-xormplus-exmaple-and-auto-transaction-impl" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2019/04/18/go-xormplus-exmaple-and-auto-transaction-impl/" class="article-date">
+      <time datetime="2019-04-18T11:32:00.000Z" itemprop="datePublished">2019-04-18</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Go语言ORM框架XORM上手实战及全自动事务托管实现(类似Spring)
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/杂七杂八/">杂七杂八</a>
+    </div>
+
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/go-orm/">go orm</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/go-xorm-事务托管/">go xorm 事务托管</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/xorm-xormplus/">xorm xormplus</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>前几天开始寻找适合自己的ORM框架, 因为自己是本命Java, Mybatis用了十年了, 就尝试搜索XMLMqpper风格的XML, 找到了GoMybatis, 经过两天的学习, 发现GoMybatis在事务方面的表现确实不尽人意, 所有事务都必须纯手工操作并且不支持嵌套事务, 这导致在数据操作层的功能代码将变得非常冗长且难以阅读, 所以我不得不重新寻找, 终于我找到了xorm plus, 这是一个基于老外开发ORM框架xorm, 国人自己魔改的独立开源ORM, 作者在简洁中解释了, 因为老外比较轴, 坚持零依赖做xorm的开发, 便导致作者只能起一个项目, 不过作者也提到会跟随xorm更新, Issues的处理也挺及时. 不过遗憾的是xorm plus也不支持类似Spring那样的全自动事务托管, 让我们可以专注于业务, 同时让代码变得简洁, 不过不要紧, 生命不止, 折腾不息, 大不了自己实现嘛. </p>
+<h2 id="开始正题"><a href="#开始正题" class="headerlink" title="开始正题"></a>开始正题</h2><h3 id="第一步-了解功能"><a href="#第一步-了解功能" class="headerlink" title="第一步 了解功能"></a>第一步 了解功能</h3><p><a href="https://github.com/go-xorm/xorm" target="_blank" rel="noopener">原版xorm传送门</a><br>原版xorm功能并不复杂, 标准的类hibernameORM, 就是用代码自动构造SQL的那种.<br><a href="https://github.com/xormplus/xorm" target="_blank" rel="noopener">加强版xorm传送门</a><br><a id="more"></a><br><strong>特性</strong></p>
+<ul>
+<li>支持Struct和数据库表之间的灵活映射, 并支持自动同步</li>
+<li>事务支持, 支持嵌套事务（支持类JAVA Spring的事务传播机制）</li>
+<li>同时支持原始SQL语句和ORM操作的混合执行</li>
+<li>使用连写来简化调用</li>
+<li>支持使用Id, In, Where, Limit, Join, Having, Table, Sql, Cols等函数和结构体等方式作为条件</li>
+<li>支持级联加载Struct</li>
+<li>支持类ibatis方式配置SQL语句（支持xml配置文件、json配置文件、xsql配置文件, 支持pongo2、jet、html/template模板和自定义实现配置多种方式）</li>
+<li>支持动态SQL功能</li>
+<li>支持一次批量混合执行多个CRUD操作, 并返回多个结果集</li>
+<li>支持数据库查询结果直接返回Json字符串和xml字符串</li>
+<li>支持SqlMap配置文件和SqlTemplate模板密文存储和解析</li>
+<li>支持缓存</li>
+<li>支持主从数据库(Master/Slave)数据库读写分离</li>
+<li>支持根据数据库自动生成xorm的结构体</li>
+<li>支持记录版本（即乐观锁）</li>
+<li>支持查询结果集导出csv、tsv、xml、json、xlsx、yaml、html功能</li>
+<li>支持SQL Builder github.com/go-xorm/builder</li>
+</ul>
+<p>我最关注的是SQL外置、嵌套事务以及级联加载, 而xorm全部支持, 那么就可以安装开始写点测试了.</p>
+<h3 id="第二步-安装"><a href="#第二步-安装" class="headerlink" title="第二步 安装"></a>第二步 安装</h3><p><a href="https://zhuxiujia.github.io/gomybatis.io/info.html" target="_blank" rel="noopener">官网传送门</a><br><a href="https://github.com/zhuxiujia/GoMybatis" target="_blank" rel="noopener">GitHub传送门</a><br><!-- more --></p>
+<p>命令行安装方式：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">go get -u github.com/xormplus/xorm</span><br><span class="line">go get github.com/go-sql-driver/mysql</span><br></pre></td></tr></table></figure>
+<p>第二句是安装Go的Mysql Driver</p>
+<h3 id="第三步-数据库准备"><a href="#第三步-数据库准备" class="headerlink" title="第三步 数据库准备"></a>第三步 数据库准备</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">DROP</span> <span class="keyword">TABLE</span> <span class="keyword">IF</span> <span class="keyword">EXISTS</span> <span class="string">`sys_user`</span>;</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="string">`sys_user`</span> (</span><br><span class="line">  <span class="string">`id`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> AUTO_INCREMENT,</span><br><span class="line">  <span class="string">`name`</span> <span class="built_in">varchar</span>(<span class="number">50</span>) <span class="keyword">COLLATE</span> utf8mb4_bin <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">  <span class="string">`sex`</span> <span class="built_in">int</span>(<span class="number">1</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">  <span class="string">`create_date`</span> <span class="built_in">timestamp</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="keyword">CURRENT_TIMESTAMP</span>,</span><br><span class="line">  <span class="string">`update_time`</span> <span class="built_in">timestamp</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="string">'0000-00-00 00:00:00'</span> <span class="keyword">ON</span> <span class="keyword">UPDATE</span> <span class="keyword">CURRENT_TIMESTAMP</span>,</span><br><span class="line">  PRIMARY <span class="keyword">KEY</span> (<span class="string">`id`</span>)</span><br><span class="line">) <span class="keyword">ENGINE</span>=<span class="keyword">InnoDB</span> AUTO_INCREMENT=<span class="number">1</span> <span class="keyword">DEFAULT</span> <span class="keyword">CHARSET</span>=utf8mb4 <span class="keyword">COLLATE</span>=utf8mb4_bin;</span><br><span class="line"></span><br><span class="line"><span class="keyword">DROP</span> <span class="keyword">TABLE</span> <span class="keyword">IF</span> <span class="keyword">EXISTS</span> <span class="string">`sys_role`</span>;</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="string">`sys_role`</span> (</span><br><span class="line">  <span class="string">`id`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> AUTO_INCREMENT,</span><br><span class="line">  <span class="string">`name`</span> <span class="built_in">varchar</span>(<span class="number">20</span>) <span class="keyword">COLLATE</span> utf8mb4_bin <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">  PRIMARY <span class="keyword">KEY</span> (<span class="string">`id`</span>) <span class="keyword">USING</span> BTREE</span><br><span class="line">) <span class="keyword">ENGINE</span>=<span class="keyword">InnoDB</span> AUTO_INCREMENT=<span class="number">1</span> <span class="keyword">DEFAULT</span> <span class="keyword">CHARSET</span>=utf8mb4 <span class="keyword">COLLATE</span>=utf8mb4_bin ROW_FORMAT=DYNAMIC;</span><br></pre></td></tr></table></figure>
+<p>这里的设计仅供测试使用, 不求需求上多么严谨, 假定用户和角色是一对多关系.</p>
+<h3 id="第三步-编写Struct"><a href="#第三步-编写Struct" class="headerlink" title="第三步 编写Struct"></a>第三步 编写Struct</h3><p>这里就可以用到特性里提到的struct生成工具了, 自己写多麻烦, 能偷懒就必须偷懒, HiaHiaHia～.<br>照例先给<a href="https://github.com/go-xorm/cmd/blob/master/README_CN.md" target="_blank" rel="noopener">传送门</a></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">go get github.com/go-xorm/cmd/xorm</span><br></pre></td></tr></table></figure>
+<p>首先要进入到这个工具的目录下, 主要是后面的命令最后一个参数中要用到存放在该目录下的<code>templates/goxorm</code>目录.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cd $GOPATH/src/github.com/go-xorm/cmd/xorm</span><br></pre></td></tr></table></figure></p>
+<p>sqlite: <code>xorm reverse sqite3 test.db templates/goxorm</code></p>
+<p>mysql: <code>xorm reverse mysql root:@/xorm_test?charset=utf8 templates/goxorm</code></p>
+<p>mymysql: <code>xorm reverse mymysql xorm_test2/root/ templates/goxorm</code></p>
+<p>postgres: <code>xorm reverse postgres &quot;dbname=xorm_test sslmode=disable&quot; templates/goxorm</code></p>
+<p>运行之后, 生成的go文件在<code>./model</code>目录下, 自行剪切到自己的项目中.</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> model</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"time"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> SysUser <span class="keyword">struct</span> &#123;</span><br><span class="line">    Id         <span class="keyword">int</span>          <span class="string">`xorm:"not null pk autoincr INT(11)"`</span></span><br><span class="line">    Name       <span class="keyword">string</span>       <span class="string">`xorm:"not null VARCHAR(50)"`</span></span><br><span class="line">    Sex        <span class="keyword">int</span>          <span class="string">`xorm:"not null INT(1)"`</span></span><br><span class="line">    CreateDate time.Time    <span class="string">`xorm:"not null default 'CURRENT_TIMESTAMP' TIMESTAMP &lt;-"`</span></span><br><span class="line">    UpdateTime time.Time    <span class="string">`xorm:"null default null TIMESTAMP &lt;-"`</span></span><br><span class="line">    Role       SysRole      <span class="string">`xorm:"-"`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> UserInterface <span class="keyword">interface</span> &#123;</span><br><span class="line">    New() error</span><br><span class="line">    Save(conditions SysUser) error</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到13行, 这里被我加了一个字段<code>Role</code>, 是用于存放用户的角色, 在使用级联加载是可自动填充.<br>还有<code>CreateDate`</code>UpdateTime<code>俩字段的Tag最后也都被我加入了</code>&lt;-<code>, 意思是这俩字段只读取不写入, 这样在CUD操作中及时这两个字段不为nil, 也不会被写入数据库.
+另外加入了一个接口</code>UserInterface`, 定义用户的行为.</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> impl</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"xorm/model"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> UserImpl <span class="keyword">struct</span> &#123;</span><br><span class="line">    model.SysUser</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(impl UserImpl)</span> <span class="title">New</span><span class="params">()</span> <span class="title">error</span></span>&#123;</span><br><span class="line">    <span class="built_in">panic</span>(<span class="string">"implement me"</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(impl UserImpl)</span> <span class="title">Save</span><span class="params">(conditions model.SysUser)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    <span class="built_in">panic</span>(<span class="string">"implement me"</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在<code>SysUser.go</code>所在目录再创建一个文件夹, 放入<code>UserInterface</code>接口的实现.<br>为什么直接实现在<code>SysUser.go</code>里面呢, 或者为什么不跟<code>SysUser.go</code>放在同级目录里呢?</p>
+<p>这里就要讲到一个Go挺让人抓狂的设定<code>import cycle not allowed</code>.<br>也就是说出现以下情况是, 编译就会报出<code>import cycle not allowed</code>错误<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">A depends on B </span><br><span class="line">B depends on A</span><br></pre></td></tr></table></figure></p>
+<p>通俗来讲, 就是不允许在不同的两个package中的两个文件里进行相互import.<br>拿我们的struct举例, 我们把接口实现就写在接口定义下面, 或者同一个package中, 当不在同一个package中的业务函数使用这个struct或者调用接口实现方法时, 势必需要import这个package, 而这个接口实现里面如果也需要调用该业务函数所在package中的其他业务函数时, 同样也需要import, 这样的话形成了循环引入, 无法编译通过.<br>所以我们只能将接口实现独立出来放入子目录中, 也就是<code>package impl</code>.</p>
+<p><code>SysRole</code>如上操作.</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> model</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> SysRole <span class="keyword">struct</span> &#123;</span><br><span class="line">    Id   <span class="keyword">int</span>    <span class="string">`xorm:"not null pk autoincr INT(11)"`</span></span><br><span class="line">    Name <span class="keyword">string</span> <span class="string">`xorm:"not null VARCHAR(20)"`</span></span><br><span class="line"></span><br><span class="line">    Users []SysUser <span class="string">`xorm:"-"`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> RoleInterface <span class="keyword">interface</span> &#123;</span><br><span class="line">    New() error</span><br><span class="line">    Save(conditions SysRole) error</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> impl</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"xorm/model"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> RoleImpl <span class="keyword">struct</span>&#123;</span><br><span class="line">    model.SysRole</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(impl RoleImpl)</span> <span class="title">New</span><span class="params">()</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    <span class="built_in">panic</span>(<span class="string">"implement me"</span>)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(impl RoleImpl)</span> <span class="title">Save</span><span class="params">(conditions model.SysRole)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">    <span class="built_in">panic</span>(<span class="string">"implement me"</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>接口实现方法先不急着填充内容, 既然Struct已经准备好了, 那就先尝尝鲜. </p>
+<h3 id="第四步-编写Test"><a href="#第四步-编写Test" class="headerlink" title="第四步 编写Test"></a>第四步 编写Test</h3><p>首先准备数据库引擎, 使用<code>sync.Once</code>保证初始化部分代码只被执行一次.</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> common</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">    <span class="string">"github.com/xormplus/xorm"</span></span><br><span class="line">    <span class="string">"sync"</span></span><br><span class="line">    <span class="string">"time"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> DBEngine <span class="keyword">struct</span> &#123;</span><br><span class="line">    xorm.Engine</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> engine *DBEngine</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> once sync.Once</span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">GetDBEngine</span><span class="params">()</span> *<span class="title">DBEngine</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    once.Do(<span class="function"><span class="keyword">func</span><span class="params">()</span></span> &#123;</span><br><span class="line">        <span class="keyword">var</span> tmp, err = xorm.NewEngine(<span class="string">"mysql"</span>, <span class="string">"root:xxxxx@tcp(localhost:3306)/gotest?charset=utf8&amp;parseTime=True"</span>)</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> err != <span class="literal">nil</span>&#123;</span><br><span class="line">            <span class="built_in">panic</span>(err)</span><br><span class="line">        &#125;</span><br><span class="line">        engine = &amp;DBEngine&#123;</span><br><span class="line">            Engine: *tmp,</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        engine.DatabaseTZ = time.Local</span><br><span class="line">        engine.TZLocation = time.Local</span><br><span class="line">        engine.ShowSQL(<span class="literal">true</span>)</span><br><span class="line">        engine.ShowExecTime(<span class="literal">true</span>)</span><br><span class="line">        engine.SetMaxOpenConns(<span class="number">1500</span>)</span><br><span class="line">        engine.SetMaxIdleConns(<span class="number">1200</span>)</span><br><span class="line">        fmt.Println(<span class="string">"******************************************************"</span>)</span><br><span class="line">    &#125;)</span><br><span class="line">    <span class="keyword">return</span> engine</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> xorm</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"encoding/json"</span></span><br><span class="line">    <span class="string">"fmt"</span></span><br><span class="line">    <span class="string">"testing"</span></span><br><span class="line">    <span class="string">"time"</span></span><br><span class="line">    <span class="string">"xorm/common"</span></span><br><span class="line">    <span class="string">"xorm/model"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Test_orm</span><span class="params">(t *testing.T)</span></span>&#123;</span><br><span class="line">    time.LoadLocation(<span class="string">"Asia/Shanghai"</span>)</span><br><span class="line">    engine := common.GetDBEngine()</span><br><span class="line"></span><br><span class="line">    session := engine.NewSession()</span><br><span class="line">    <span class="keyword">defer</span> session.Close()</span><br><span class="line"></span><br><span class="line">    tx, e := session.BeginTrans()</span><br><span class="line">    <span class="keyword">if</span> e != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="built_in">panic</span>(e)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    user := &amp;model.SysUser&#123;</span><br><span class="line">        Name:   <span class="string">"Victor"</span>,</span><br><span class="line">        Sex:    <span class="number">1</span>,</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    txsession := tx.Session()</span><br><span class="line"></span><br><span class="line">    _, err := txsession.InsertOne(user)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="built_in">panic</span>(err)</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">bool</span>, err := txsession.ID(user.Id).Get(user)</span><br><span class="line">    <span class="keyword">if</span> !<span class="keyword">bool</span> &#123;</span><br><span class="line">        <span class="built_in">panic</span>(err)</span><br><span class="line">    &#125;</span><br><span class="line">    fmt.Println(user)</span><br><span class="line">    j, err := json.Marshal(user)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="built_in">panic</span>(err)</span><br><span class="line">    &#125;</span><br><span class="line">    fmt.Println(<span class="keyword">string</span>(j))</span><br><span class="line"></span><br><span class="line">    res2, err := txsession.Update(&amp;model.SysUser&#123;</span><br><span class="line">        Name:       <span class="string">"hhh"</span>,</span><br><span class="line">    &#125;, &amp;model.SysUser&#123;</span><br><span class="line">        Sex:        <span class="number">2</span>,</span><br><span class="line">    &#125;)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="built_in">panic</span>(err)</span><br><span class="line">        txsession.Rollback()</span><br><span class="line">    &#125;</span><br><span class="line">    txsession.Commit()</span><br><span class="line">    fmt.Println(res2)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>因为<code>SysUser</code>中使用的是自增Id, 所以调用<code>Insert</code>或者<code>InsertOne</code>方法时, 会自动获取自增后的Id反向注入传入的<code>user</code>指针中.<br>这里需要特别注意的是, 无论你是否传入的是指针, 都会执行成功. 但如果传入的<code>user</code>不是指针则xorm无法完成自增Id的反向注入.<br>同理, 进行调用查询相关API时, 例如上面的Get方法, 也必须传入指针, 否则xorm也无法完成结果集的自动装箱.</p>
+<p>到此我们大致明白了xorm的基础用法, 那么可以开始放大招了, 开始准备实现全自动事务托管.</p>
+<h3 id="第四步-为什么需要全自动事务托管"><a href="#第四步-为什么需要全自动事务托管" class="headerlink" title="第四步 为什么需要全自动事务托管?"></a>第四步 为什么需要全自动事务托管?</h3><p>首先先来看一段没有使用全自动事务托管的代码.</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> user</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">    <span class="string">"github.com/xormplus/xorm"</span></span><br><span class="line">    <span class="string">"xorm/cmd"</span></span><br><span class="line">    <span class="string">"xorm/common"</span></span><br><span class="line">    <span class="string">"xorm/model"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> NewUserCMD <span class="keyword">struct</span> &#123;</span><br><span class="line">    User    model.SysUser</span><br><span class="line">    Session *xorm.Session</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this NewUserCMD)</span> <span class="title">Execute</span><span class="params">()</span> <span class="params">(<span class="keyword">interface</span>&#123;&#125;, error)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> engine *common.DBEngine</span><br><span class="line">    <span class="keyword">var</span> session *xorm.Session</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> this.Session == <span class="literal">nil</span> &#123;</span><br><span class="line">        engine = common.GetDBEngine()</span><br><span class="line">        session = engine.NewSession()</span><br><span class="line">        <span class="keyword">defer</span> session.Close()</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        session = this.Session</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    tx1, err := session.BeginTrans()</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    _, err1 := session.InsertOne(this.User)</span><br><span class="line">    <span class="keyword">if</span> err1 != <span class="literal">nil</span> &#123;</span><br><span class="line">        tx1.RollbackTrans()</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span>, err</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    res, err2 := cmd.Exec(&amp;NewRoleCmd&#123;</span><br><span class="line">        Role: this.User.Role,</span><br><span class="line">        Session: session,</span><br><span class="line">    &#125;)</span><br><span class="line">    <span class="keyword">if</span> err2 != <span class="literal">nil</span> &#123;</span><br><span class="line">        tx1.RollbackTrans()</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">nil</span>, err2</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    tx1.CommitTrans()</span><br><span class="line">    <span class="keyword">return</span> res, <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>这是一段使用简化的命名模式实现的Struct, 这个命令需要两个参数, 一个<code>User</code>一个<code>一个Session</code>, 从命令名称就能看懂, 这是用来新增用户的, 对命令模式不熟的同学就把这个单纯当成一个新增用户的函数来理解就好.<br>在通常业务中, 新增用户的函数, 可能是一段事务里的第一个函数,例如注册. 也可能是一段事务里中间的函数, 例如有外键关联的用户, 需要先创建外键数据拿到Id后才创建用户那种.</p>
+<p>那么按照上诉可能性, 就需要先判断<code>Session</code>是否为空, 如果是做为第一个被调用的函数那么<code>Session</code>就是空的, 中间被调用的话则会被传入.</p>
+<p>得到<code>Session</code>后, 开启事务完成新增, 接着调用新增角色的命令, 把<code>Session</code>继续往下传. 新增角色函数返回后, 再根据是否返回异常决定是回滚还是提交.</p>
+<p>在这么长一段代码中, 其实我们真正干的业务就只有两个, 新增用户, 新增角色. 本来仅仅只需要两句代码, 但是因为事务的关系, 无关业务的代码量是业务代码的数倍, 既浪费时间又大大增加发生Bug的可能性, 而事务上的Bug又具有比较高的隐蔽性和高危性, 不影响编译运行, 一旦触发直接导致脏数据.</p>
+<p>这就是为什么我们需要全自动事务托管.</p>
+<h3 id="第五步-实现全自动事务托管"><a href="#第五步-实现全自动事务托管" class="headerlink" title="第五步 实现全自动事务托管"></a>第五步 实现全自动事务托管</h3><p>我的实现思路是和Spring的全自动事务托管差不多的, 但是因为Go不支持动态代理, 所以需要绕一点弯子.</p>
+<p>根据第五步中讲到的内容, 用最通俗的话来讲, 我们需要解决的问题就是把事务相关的代码从函数中统统拿掉.</p>
+<p>所以我们需要一个代理来帮我们做这件事, 而我选择用简化版命令模式来干这件事.</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> cmd</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> Command <span class="keyword">interface</span> &#123;</span><br><span class="line">    Execute() (<span class="keyword">interface</span>&#123;&#125;, error)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>定义一个接口, 所有的业务命令实现这个接口. 例如刚刚讲到的<code>NewUserCMD</code>命令.</p>
+<p>然后编写一个命令执行器函数.</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> cmd</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Exec</span><span class="params">(cmd Command)</span> <span class="params">(<span class="keyword">interface</span>&#123;&#125;, error)</span></span> &#123;</span><br><span class="line">    ...</span><br><span class="line">    res, err := cmd.Execute()</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>因为我们的命令都实现了<code>Command</code>接口, 所以这里我们可以直接接收<code>Command</code>类型的参数.<br>然后像这样完成命令的调用执行</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cmd.Exec(&amp;XXXCMD&#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+<p>这样我们就实现了对命令的环绕代理, 可以任意在其前后添加执行代码.</p>
+<p>到这里, 我们就是可以在<code>res, err := cmd.Execute()</code>之前, 完成获取<code>Session</code>和开启事务的操作, 在之后根据返回值<code>err</code>判断是Commit还是Rollback.</p>
+<p>但是问题来了, 不是所有命令都需要开启事务, 如果是纯查询的命令, 自然是不需要事务的, 那么需要在命令的<code>Session</code>参数后增加一个Tag配置, <code>trans:&quot;0&quot;</code>, 然后在命令执行器中通过反射获取这个Tag, 从而判断是否需要开启事务以及开启事务的类型.<br>(xorm plus支持8种事务类型, 详见<a href="https://www.kancloud.cn/xormplus/xorm/235728" target="_blank" rel="noopener">传送门</a>)<br>既然传入的命令需要开启事务, 那么说明该命令里需要进行数据库操作, 那么肯定需要<code>Session</code>, 所以我们需要获取一个<code>Session</code>通过反射注入该命令的<code>Session</code>字段中.</p>
+<p>那么假设跟第四步中的例子一样, 这个命令中又调用另一个命令呢? 在那个例子中我们是在调用时手动传入的Session, 如果这里还需要我们手动传入, 还算哪门子的全自动?<br>也就是说需要当这个命令里再次通过<code>cmd.Exec()</code>函数调用其它命令而再次进入这个函数时, 我们需要判断在它之前时候已经开启过事务, 如果开启过事务则获取该事务然后<code>.Session()</code>, 从而获取到加入这个事务的<code>Session</code>并反射注入给这个“其它命令”.</p>
+<p>那么问题又来了, 因为<code>cmd.Exec()</code>会被并发访问, 所以必然不能使用全局变量来存储事务, 那样肯定会导致线程安全问题, 那么我们的事务该怎么保存呢?</p>
+<p>整理下需求, 我们需要一个内存空间, 这个内存空间只能被同一个线程上的代码访问, 用来临时存放事务, 当嵌套命令调用完毕逐层返回到最顶层时, 清空这个空间以便GC回收.</p>
+<p>理清需求发现我们需要的就是Java里<code>ThreadLocal</code>这样的东西, 不过很可惜, Go里又木有😭, 认命, 自己实现.</p>
+<p>首先我们需要编写一个获取线程Id的功能, 为了偷懒, 我从<a href="https://github.com/bradfitz/http2/blob/dc0c5c000ec33e263612939744d51a3b68b9cece/gotrack.go" target="_blank" rel="noopener">http2</a>这个开源项目里直接扣了一个现成的出来😂.</p>
+<p>安全起见, 我做了几十次5000线的并发测试, 没出现一例遗漏或者重复的情况, 可放心食用.<br>这个文件中<code>func curGoroutineID()</code>函数就是获取线程Id的, 自行将其改成公有函数.<br>有了线程Id之后, 我们还需要一个线程安全的<code>Map</code>, 用线程Id当Key, 来临时存放事务, 还好这个有, <code>sync.Map</code>就是官方提供的线程安全Map.</p>
+<p>这样我们就可以在同一个线程中共享事务, 每次<code>cmd.Exec()</code>被调用, 先从这个我们自己实现的<code>ThreadLocal</code>中获取事务, 获取不到说明是第一次被调用, 获取<code>Session</code>开启事务存入<code>ThreadLocal</code>中, 获取到就直接使用这个事务调用<code>.Session()</code>得到加入这个事务后的<code>Session</code>再注入给需要被执行的命令. </p>
+<p>上代码</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> cmd</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">  <span class="string">"github.com/xormplus/xorm"</span></span><br><span class="line">  <span class="string">"reflect"</span></span><br><span class="line">  <span class="string">"sync"</span></span><br><span class="line">  <span class="string">"xorm/common"</span></span><br><span class="line">  <span class="string">"xorm/utils"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">var</span> m sync.Map</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">Exec</span><span class="params">(cmd Command)</span> <span class="params">(<span class="keyword">interface</span>&#123;&#125;, error)</span></span> &#123;</span><br><span class="line">  <span class="comment">//获取Session字段</span></span><br><span class="line">  v := reflect.ValueOf(cmd)</span><br><span class="line"></span><br><span class="line">  t, ok := reflect.Indirect(v).Type().FieldByName(<span class="string">"Session"</span>)</span><br><span class="line"></span><br><span class="line">  <span class="comment">//如果没有获取到Session字段则说明无DB操作，直接执行。</span></span><br><span class="line">  <span class="keyword">if</span> !ok &#123;</span><br><span class="line">    <span class="keyword">return</span> cmd.Execute()</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">var</span> session *xorm.Session</span><br><span class="line"></span><br><span class="line">  <span class="comment">//用来包裹放入sync.Map的Transaction，因为sync.Map.Load函数无法返回指针，</span></span><br><span class="line">  <span class="comment">//所以需要用Map来做一层包裹 使用了CurGoroutineID来做为sync.Map的Key，</span></span><br><span class="line">  <span class="comment">//因此每一个transMap只能被创建它的线程获取到，所以不存在线程安全问题。</span></span><br><span class="line">  <span class="keyword">var</span> transMap <span class="keyword">map</span>[<span class="keyword">string</span>]*xorm.Transaction</span><br><span class="line">  <span class="keyword">var</span> tx *xorm.Transaction</span><br><span class="line">  <span class="comment">//从Session字段的Tag中获取需要开启事务的类型。</span></span><br><span class="line">  <span class="keyword">var</span> transactionDefinition <span class="keyword">int</span></span><br><span class="line">  routineId := utils.CurGoroutineID()</span><br><span class="line">  txv, ok := m.Load(routineId)</span><br><span class="line">  <span class="comment">//如果从根据当前线程ID从缓存中获取到了事务，则使用该事务初始化Session。</span></span><br><span class="line">  <span class="comment">//否则则获取一个新的Session</span></span><br><span class="line">  <span class="keyword">if</span> ok &#123;</span><br><span class="line">    transMap = txv.(<span class="keyword">interface</span>&#123;&#125;).(<span class="keyword">map</span>[<span class="keyword">string</span>]*xorm.Transaction)</span><br><span class="line">    tx = transMap[<span class="string">"tx"</span>]</span><br><span class="line">    session = tx.Session()</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    engine := common.GetDBEngine()</span><br><span class="line">    session = engine.NewSession()</span><br><span class="line">    <span class="keyword">defer</span> clean(session, routineId)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">  tagString := t.Tag.Get(<span class="string">"trans"</span>)</span><br><span class="line">  <span class="comment">//如果获取不到则说明不需要事务，默认为PROPAGATION_NOT_SUPPORTED。</span></span><br><span class="line">  <span class="comment">//该情况多数应用在写日志等不影响主业务的命令。</span></span><br><span class="line">  <span class="keyword">if</span> tagString == <span class="string">""</span> &#123;</span><br><span class="line">    transactionDefinition = xorm.PROPAGATION_NOT_SUPPORTED</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">//如果transType配置的不是数字，或者不在合法范围则回滚并抛出异常。</span></span><br><span class="line">    err := utils.StrToInt(tagString, &amp;transactionDefinition)</span><br><span class="line">    <span class="keyword">if</span> err != <span class="literal">nil</span> &amp;&amp; transactionDefinition &gt;= <span class="number">0</span> &amp;&amp; transactionDefinition &lt;= <span class="number">7</span> &#123;</span><br><span class="line">      session.Rollback()</span><br><span class="line">      <span class="built_in">panic</span>(<span class="string">"unrecognized transaction type, value range 0-7."</span>)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  transMap = <span class="built_in">make</span>(<span class="keyword">map</span>[<span class="keyword">string</span>]*xorm.Transaction, <span class="number">1</span>)</span><br><span class="line"></span><br><span class="line">  <span class="comment">//开启嵌套事务</span></span><br><span class="line">  tx, err := session.BeginTrans(transactionDefinition)</span><br><span class="line">  <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    <span class="built_in">panic</span>(err)</span><br><span class="line">  &#125;</span><br><span class="line">  transMap[<span class="string">"tx"</span>] = tx</span><br><span class="line"></span><br><span class="line">  <span class="comment">//通过反射将Session注入CMD</span></span><br><span class="line">  <span class="comment">//因为部分事务类型会开启新的Session, 所以这里需要通过tx.Session()重新获取。</span></span><br><span class="line">  fv := v.Elem().FieldByName(<span class="string">"Session"</span>)</span><br><span class="line">  fv.Set(reflect.ValueOf(tx.Session()))</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> !ok &#123;</span><br><span class="line">    m.Store(utils.CurGoroutineID(), transMap)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  res, err := cmd.Execute()</span><br><span class="line"></span><br><span class="line">  <span class="comment">//begin = time.Now().UnixNano() / 1e6</span></span><br><span class="line">  <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    tx.RollbackTrans()</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    tx.CommitTrans()</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> res, err</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//关闭Session和根据进程ID清理缓存，以便GC回收。</span></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">clean</span><span class="params">(session *xorm.Session, routineId <span class="keyword">uint64</span>)</span></span>&#123;</span><br><span class="line">  session.Close()</span><br><span class="line">  m.Delete(routineId)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>说起来逻辑挺绕挺高大上的, 但实际代码量并不多, 就这么点, 跟着注释来看, 应该能明白具体逻辑.<br>接着来看使用全自动事务托管之后的命令时什么样子.</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> autotx</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">  <span class="string">"github.com/xormplus/xorm"</span></span><br><span class="line">  <span class="string">"xorm/cmd"</span></span><br><span class="line">  <span class="string">"xorm/model"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> NewUserCMD <span class="keyword">struct</span> &#123;</span><br><span class="line">  User    model.SysUser</span><br><span class="line">  Session *xorm.Session <span class="string">`trans:"0"`</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(this NewUserCMD)</span> <span class="title">Execute</span><span class="params">()</span> <span class="params">(res <span class="keyword">interface</span>&#123;&#125;, err error)</span></span> &#123;</span><br><span class="line"></span><br><span class="line">  res, err = this.Session.InsertOne(this.User)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    <span class="keyword">return</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  res, err = cmd.Exec(&amp;NewRoleCmd&#123;</span><br><span class="line">    Role: this.User.Role,</span><br><span class="line">  &#125;)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>做的事和第四步中那个命令一样, 一个用了50代码, 一个只用了27行, 效果立竿见影, 清爽易懂. </p>
+<h3 id="第六步-编写Test"><a href="#第六步-编写Test" class="headerlink" title="第六步 编写Test"></a>第六步 编写Test</h3><p>先把第三步中两个Struct接口实现的坑填上方便测试.</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> impl</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">  <span class="string">"xorm/cmd"</span></span><br><span class="line">  <span class="string">"xorm/cmd/user/autotx"</span></span><br><span class="line">  <span class="string">"xorm/model"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> UserImpl <span class="keyword">struct</span> &#123;</span><br><span class="line">  model.SysUser</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(impl UserImpl)</span> <span class="title">New</span><span class="params">()</span> <span class="title">error</span></span>&#123;</span><br><span class="line">  _, err := cmd.Exec(&amp;autotx.NewUserCMD&#123;</span><br><span class="line">    User: impl.SysUser,</span><br><span class="line">  &#125;)</span><br><span class="line">  <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> err</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//fmt.Println(res)</span></span><br><span class="line">  <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(impl UserImpl)</span> <span class="title">Save</span><span class="params">(conditions model.SysUser)</span> <span class="title">error</span></span> &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> impl</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> (</span><br><span class="line">  <span class="string">"xorm/cmd"</span></span><br><span class="line">  <span class="string">"xorm/cmd/user/autotx"</span></span><br><span class="line">  <span class="string">"xorm/model"</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">type</span> RoleImpl <span class="keyword">struct</span>&#123;</span><br><span class="line">  model.SysRole</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(impl RoleImpl)</span> <span class="title">New</span><span class="params">()</span> <span class="title">error</span></span> &#123;</span><br><span class="line">  _, err := cmd.Exec(&amp;autotx.NewRoleCmd&#123;Role: impl.SysRole&#125;)</span><br><span class="line">  <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> err</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//fmt.Println(res)</span></span><br><span class="line">  <span class="keyword">return</span> <span class="literal">nil</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">func</span> <span class="params">(impl RoleImpl)</span> <span class="title">Save</span><span class="params">(conditions model.SysRole)</span> <span class="title">error</span></span> &#123;</span><br><span class="line">  <span class="built_in">panic</span>(<span class="string">"implement me"</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>用<code>testing</code>编写测试函数.</p>
+<figure class="highlight go"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">func</span> <span class="title">TestUser</span><span class="params">(t *testing.T)</span></span> &#123;</span><br><span class="line">  <span class="keyword">defer</span> waitgroup.Done()</span><br><span class="line">  user := impl.UserImpl&#123;</span><br><span class="line">    SysUser: model.SysUser&#123;</span><br><span class="line">      Name: <span class="string">"Victor2"</span>,</span><br><span class="line">      Sex: <span class="number">1</span>,</span><br><span class="line">      Role: model.SysRole&#123;</span><br><span class="line">          Name: <span class="string">"role"</span>,</span><br><span class="line">      &#125;,</span><br><span class="line">    &#125;,</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">var</span> err error</span><br><span class="line"></span><br><span class="line">  err = user.New()</span><br><span class="line">  <span class="keyword">if</span> err != <span class="literal">nil</span> &#123;</span><br><span class="line">    <span class="built_in">panic</span>(err)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>执行通过, 完结撒花.<br>经过测试, 刨开xorm plus自身用时后得到的<code>cmd.Exec()</code>函数用时不到1ms, 另外经过1000线并发测试, 在我这个15年的Macbook air上, 1秒完成.</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>拉了下滚动条, 特么又写了这么多, 也不知道会不会有人看到, 权当自己巩固记忆吧, xorm plus确实是目前我了解到最适合国内业务的ORM框架, 简单的SQL可以直接调用API自动构造SQL执行, 复杂的SQL也可以外置存放到模版文件中, 类似Mybaits的XMLMapper, 通过模版来动态构造复杂的SQL, 支持8种事务类型, 基本和Spring一致, 再使用本文中的方式, 实现全自动事务托管, 可降低人才要求和Bug率同时提升编码效率和可阅读性. Go语言很不错很强大, 但在这一切搞定之前, 还真不敢将其运用到生产环境中, 现在终于可以浪起来了, Happy.</p>
+<p>本文中的源码之后有空可能会整理发布到Github, 当然也可能被我忘记了, 如果真有幸被你看到而我确实忘记发布而你又确实非常需要, 可以留言给我, 我会收到邮件通知的.</p>
+<p>至此，又一篇超长的博文诞生！Thanks for your reading。</p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2019/04/18/go-xormplus-exmaple-and-auto-transaction-impl/">Go语言ORM框架XORM上手实战及全自动事务托管实现(类似Spring)</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">Victor Jones</a></p>
+        <p><span>发布时间:</span>2019-04-18, 19:32:00</p>
+        <p><span>最后更新:</span>2019-04-19, 09:11:57</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2019/04/18/go-xormplus-exmaple-and-auto-transaction-impl/" title="Go语言ORM框架XORM上手实战及全自动事务托管实现(类似Spring)">https://veevv.com/2019/04/18/go-xormplus-exmaple-and-auto-transaction-impl/</a>
+            <span class="copy-path" data-clipboard-text="原文: https://veevv.com/2019/04/18/go-xormplus-exmaple-and-auto-transaction-impl/　　作者: Victor Jones" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target="_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2019/04/13/go-gomybatis-learning-experience/">
+                    Go语言的ORM框架GoMybatis的学习经历
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#开始正题"><span class="toc-number">2.</span> <span class="toc-text">开始正题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#第一步-了解功能"><span class="toc-number">2.1.</span> <span class="toc-text">第一步 了解功能</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#第二步-安装"><span class="toc-number">2.2.</span> <span class="toc-text">第二步 安装</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#第三步-数据库准备"><span class="toc-number">2.3.</span> <span class="toc-text">第三步 数据库准备</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#第三步-编写Struct"><span class="toc-number">2.4.</span> <span class="toc-text">第三步 编写Struct</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#第四步-编写Test"><span class="toc-number">2.5.</span> <span class="toc-text">第四步 编写Test</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#第四步-为什么需要全自动事务托管"><span class="toc-number">2.6.</span> <span class="toc-text">第四步 为什么需要全自动事务托管?</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#第五步-实现全自动事务托管"><span class="toc-number">2.7.</span> <span class="toc-text">第五步 实现全自动事务托管</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#第六步-编写Test"><span class="toc-number">2.8.</span> <span class="toc-text">第六步 编写Test</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-number">3.</span> <span class="toc-text">总结</span></a></li></ol>
+</div>
+<style>
+    .left-col .switch-btn,
+    .left-col .switch-area {
+        display: none;
+    }
+</style>
+
+<input type="button" id="tocButton" value="隐藏目录" title="点击按钮隐藏或者显示文章目录">
+
+<script>
+    yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+</script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"Go语言ORM框架XORM上手实战及全自动事务托管实现(类似Spring)　| Victor’ Blog　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+      <!-- 来必力City版安装代码 -->
+<div id="lv-container" data-id="city" data-uid="MTAyMC8zMDc1Ni83MzA4">
+	<script type="text/javascript">
+   (function(d, s) {
+       var j, e = d.getElementsByTagName(s)[0];
+
+       if (typeof LivereTower === 'function') { return; }
+
+       j = d.createElement(s);
+       j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+       j.async = true;
+
+       e.parentNode.insertBefore(j, e);
+   })(document, 'script');
+	</script>
+	<style>
+	#lv-container{
+	    margin:0 22px 0 24px;
+	}
+	</style>
+<noscript> 为正常使用来必力评论功能请激活JavaScript</noscript>
+</div>
+<!-- City版安装代码已完成 -->
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2019/04/13/go-gomybatis-learning-experience/" title="下一篇: Go语言的ORM框架GoMybatis的学习经历">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/04/18/go-xormplus-exmaple-and-auto-transaction-impl/">Go语言ORM框架XORM上手实战及全自动事务托管实现(类似Spring)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/13/go-gomybatis-learning-experience/">Go语言的ORM框架GoMybatis的学习经历</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/12/12/how-to-install-tensorflow-on-arm/">如何在arm板(cubieboard)上编译安装tensorflow</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/05/17/how-to-install-mysql5.7-by-yum/">CentOS7如何使用yum安装Mysql5.7</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/03/17/flowable-modeler-integrate/">如何整合Flowable-modeler到自己的项目中</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/06/01/linux-centos-vsftp-configuration/">linux/centos中配置vsftp</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/02/27/java-map-generic-problem/">一个Map泛型的问题</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/01/16/magazine-faq/">深坑浅坑集合</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/30/tomcat-multi-project-start-error/">使用tomcat部署多个项目时, 启动莫名其妙的错, schedulerFactory_Worker-1 memory leak.</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/25/linux-centos-jdk-installation/">linux/centos下安装如何安装JDK</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/25/tomcat-start-error-contextloaderlistener/">使用ContextLoaderListener监听tomcat启动时, tomcat启动报错.</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/10/26/double-eleven-get-coupon/">双十一优惠券 一次性全部领取</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/09/30/mybatis-mapper-xml-reloader/">Mybatis Mapper配置XML文件热加载实现</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/09/23/j2ee-faq/">java常见问题集合</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/09/23/spring-mvc-ajax-json-406/">Spring MVC 使用ajax请求json数据时出现406 Not Acceptable</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/07/27/tomcat-linux-auto-start/">linux中设置tomcat开机启动</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/07/14/common-code-memo/">常用语句备忘</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/07/10/touch.js-baidu-code/">touch.js 百度开源项目.</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/06/26/bootstrap-css/">bootstrap栅格布局样式备忘.</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/06/24/my-first-blog/">我历经百般磨难, 命运各种坎坷的第一篇博文.</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2016-2019 Victor Jones
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style="display:none">
+                        <span id="site-visit">本站到访数: 
+                            <span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>, </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style="display:none">
+                        <span id="page-visit">本页阅读量: 
+                            <span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//lib.baomitu.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script async src="https://busuanzi.ibruce.info//busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>
