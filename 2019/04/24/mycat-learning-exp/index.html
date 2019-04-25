@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<meta name="author" content="Victor Jones">
+
+
+
+<meta name="description" content="前言现在微服务真是火得不行不行的, 最近开始找工作, 打开Boss直聘一看, 乖乖, 整页整页全是要求会整微服务的, 其中不乏很多小微企业, 搞得好像微服务就是万能的似的, 真不知道是中了谁的毒. 微服务肯定是个好东西, 优点很多, 百度一下一大把, 这里我们就不说了, 先讨论讨论微服务必然会带来几个问题.  通信问题, 微服务间是肯定需要通信的, 不能像以前一样调个方法搞定了. 分布式事务问题暨">
+<meta name="keywords" content="mycat 数据库中间件,mycat 实践">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Mycat数据库中间件上手实践及分布式事务和分库分片实现">
+<meta property="og:url" content="https://veevv.com/2019/04/24/mycat-learning-exp/index.html">
+<meta property="og:site_name" content="Victor’ Blog">
+<meta property="og:description" content="前言现在微服务真是火得不行不行的, 最近开始找工作, 打开Boss直聘一看, 乖乖, 整页整页全是要求会整微服务的, 其中不乏很多小微企业, 搞得好像微服务就是万能的似的, 真不知道是中了谁的毒. 微服务肯定是个好东西, 优点很多, 百度一下一大把, 这里我们就不说了, 先讨论讨论微服务必然会带来几个问题.  通信问题, 微服务间是肯定需要通信的, 不能像以前一样调个方法搞定了. 分布式事务问题暨">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-04-25T00:50:23.436Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Mycat数据库中间件上手实践及分布式事务和分库分片实现">
+<meta name="twitter:description" content="前言现在微服务真是火得不行不行的, 最近开始找工作, 打开Boss直聘一看, 乖乖, 整页整页全是要求会整微服务的, 其中不乏很多小微企业, 搞得好像微服务就是万能的似的, 真不知道是中了谁的毒. 微服务肯定是个好东西, 优点很多, 百度一下一大把, 这里我们就不说了, 先讨论讨论微服务必然会带来几个问题.  通信问题, 微服务间是肯定需要通信的, 不能像以前一样调个方法搞定了. 分布式事务问题暨">
+
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+
+    <link rel="alternative" href="/atom.xml" title="Victor’ Blog" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/favicon.png">
+
+
+
+    <link href="//lib.baomitu.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//lib.baomitu.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//lib.baomitu.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//lib.baomitu.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>Mycat数据库中间件上手实践及分布式事务和分库分片实现 | Victor’ Blog</title>
+
+<script src="//lib.baomitu.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//lib.baomitu.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        open_in_new: false,
+        fancybox_js: "//lib.baomitu.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//lib.baomitu.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: false
+    };
+</script>
+
+
+
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//lib.baomitu.com/jqueryui/1.10.4/jquery-ui.min.js", "//lib.baomitu.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+
+</head></html>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="https://en.gravatar.com/avatar/d8feb2f92e88467381204ad8ce70e97b?s=150" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">Victor Jones</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">一只小小Coder在自说自话</p>
+        
+
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签云</a></li>
+                        
+                            <li><a href="javascript:$('.tips-inner li:last').trigger('click')">关于我</a></li>
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="http://mail.qq.com/cgi-bin/qm_share?t=qm_mailme&email=v@veevv.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" href="#" title="GitHub"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/ajax-parsererror/">$.ajax parsererror</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/406-Not-Acceptable/">406 Not Acceptable</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ContextLoaderListener-启动报错/">ContextLoaderListener 启动报错</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JDK-安装/">JDK 安装</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Map泛型变了/">Map泛型变了</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Map泛型失效/">Map泛型失效</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL主从同步/">MySQL主从同步</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SpringMVC-406/">SpringMVC 406</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/bootstrap/">bootstrap</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/centos/">centos</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/centos-jdk安装/">centos jdk安装</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/col-xl/">col-xl</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/flowable-modeler/">flowable-modeler</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/go-orm/">go orm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/gomybatis/">gomybatis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/j2ee/">j2ee</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/j2ee-faq/">j2ee faq</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/java/">java</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/jquery/">jquery</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/js/">js</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/linux/">linux</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/linux-JDK安装/">linux JDK安装</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mapper-热加载/">mapper 热加载</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/memory-leak/">memory leak</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mybatis/">mybatis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mybatis-热加载/">mybatis 热加载</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mycat-实践/">mycat 实践</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mycat-数据库中间件/">mycat 数据库中间件</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql5-8-zip安装/">mysql5.8 zip安装</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql5-8-解压版安装/">mysql5.8 解压版安装</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql5-8zip安装/">mysql5.8zip安装</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql5-8解压版安装/">mysql5.8解压版安装</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql启动失败/">mysql启动失败</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql自动备份/">mysql自动备份</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/schedulerFactory-Worker-1/">schedulerFactory_Worker-1</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/selinux/">selinux</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/spring/">spring</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/spring-mvc-json-406/">spring mvc json 406</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tomcat/">tomcat</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tomcat-启动报错/">tomcat 启动报错</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tomcat-多项目-启动报错/">tomcat 多项目 启动报错</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tomcat启动报错/">tomcat启动报错</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tomcat多项目启动报错/">tomcat多项目启动报错</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/touch/">touch</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/touch-js/">touch.js</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/vsftp/">vsftp</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/xorm-xormplus/">xorm xormplus</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/xorm-事务托管/">xorm 事务托管</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/xorm-全自动事务/">xorm 全自动事务</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/xorm-嵌套事务/">xorm 嵌套事务</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/yum安装Mysql5-7/">yum安装Mysql5.7</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/双十一/">双十一</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/双十一优惠券/">双十一优惠券</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/双十一优惠卷/">双十一优惠卷</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/布局/">布局</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/开启启动/">开启启动</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/栅格/">栅格</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/编译tensorflow-On-Arm/">编译tensorflow On Arm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/自动启动/">自动启动</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://hexo.io">Hexo</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://pages.github.com/">GitHub</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="http://moxfive.xyz/">MOxFIVE</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">一只低调的小程序猿, 10年+Java相关开发经验, 6年+项目及团队管理经验, 其它擅长语言HTML(HTML4/5)、SQL、JavaScript、Python、GoLang, 拥有强大的自驱动力和学习能力, 乐于迎接挑战且善于完成挑战。</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">Victor Jones</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="https://en.gravatar.com/avatar/d8feb2f92e88467381204ad8ce70e97b?s=150" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">Victor Jones</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">一只小小Coder在自说自话</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签云</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="http://mail.qq.com/cgi-bin/qm_share?t=qm_mailme&email=v@veevv.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" href="#" title="GitHub"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我">
+</nav>
+      <div class="body-wrap"><article id="post-mycat-learning-exp" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2019/04/24/mycat-learning-exp/" class="article-date">
+      <time datetime="2019-04-24T13:21:00.000Z" itemprop="datePublished">2019-04-24</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Mycat数据库中间件上手实践及分布式事务和分库分片实现
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/杂七杂八/">杂七杂八</a>
+    </div>
+
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/mycat-实践/">mycat 实践</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/mycat-数据库中间件/">mycat 数据库中间件</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>现在微服务真是火得不行不行的, 最近开始找工作, 打开Boss直聘一看, 乖乖, 整页整页全是要求会整微服务的, 其中不乏很多小微企业, 搞得好像微服务就是万能的似的, 真不知道是中了谁的毒. 微服务肯定是个好东西, 优点很多, 百度一下一大把, 这里我们就不说了, 先讨论讨论微服务必然会带来几个问题.</p>
+<ul>
+<li>通信问题, 微服务间是肯定需要通信的, 不能像以前一样调个方法搞定了.</li>
+<li>分布式事务问题暨数据一致性问题, 微服务之间DB操作无法放在一个数据库事务中了.</li>
+<li>维护问题, 微服务的维护难度必然是远超过单服务, 如果涉及垂直和水平分库分片更甚.</li>
+</ul>
+<p>首先通信问题, 目前主流的做法是RPC和REST, 无论哪种都必然需要目前主流的做法是RPC和REST, 无论哪种都必然需要增加一个接口层的编码, 这带来的工作量增加是无解的.<br>维护问题亦然, 只要拆分了, 特别是数据库, 那么不仅仅是维护难度成倍增加, 连开发难度都会成倍增加.<br>这两点是无法逃避的, 但时间能解决, 唯独分布式事务这块是硬伤, 不能解决或解决不好都是会影响到数据健壮性的致命问题, 而本文要讨论的就是如何使用Mycat省时省力且优雅的解决它.</p>
+<h2 id="开始正题"><a href="#开始正题" class="headerlink" title="开始正题"></a>开始正题</h2><h3 id="第一步-准备工作"><a href="#第一步-准备工作" class="headerlink" title="第一步 准备工作"></a>第一步 准备工作</h3><p>老规矩先上传送门</p>
+<p><a href="http://www.mycat.io/" target="_blank" rel="noopener">官网传送门</a><br><a href="https://github.com/MyCATApache/Mycat-Server" target="_blank" rel="noopener">GitHub传送门</a><br><a id="more"></a><br>我估计好多小伙伴都会条件反射点GitHub传送门, 然后进release里去下载, 嗯, 我也这样.<br>然后! 然后! 我就被这坑进去了4个多小时!<br>release里最后的版本是1.6.5! 而这个版本join居然有BUG! 关键是最新release版本已经到1.6.7.1了! 关于BUG后面再讲.<br><a href="http://dl.mycat.io/1.6.7.1/" target="_blank" rel="noopener">下载地址传送门</a></p>
+<p>下载好了之后解压到你需要它在的位置就可以了, 这货不需要安装, 挺绿色.<br>配置好后可直接<code>./mycat start</code>启动.</p>
+<p>哦对了, Win下直接启动会告诉你需要先注册服务, 按照提示执行注册服务命令就好了.</p>
+<p>开始启动会在自身目录生成log文件夹, log里包含两个日志文件<code>warapper.log</code> <code>mycat.log</code>, 第一个是启动日志, 遇到启动失败记得看这个日志, 第二个是执行日志.</p>
+<p>又哦对了, 启动时可能会因为权限问题无法创建log文件夹导致报错启动失败, 遇到了可以自行创建解决或者给权限解决.</p>
+<p>继续往下阅读, 会涉及到一些主从同步|读写分离的知识, 如果不是很了解的话, 请看刚刚专门为这边Blog写完的<a href="https://veevv.com/2019/04/24/mysql_main_slave_config/">这货</a></p>
+<h3 id="第二步-关键配置及理解"><a href="#第二步-关键配置及理解" class="headerlink" title="第二步 关键配置及理解"></a>第二步 关键配置及理解</h3><p><strong>server.xml</strong></p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 1为开启全局表一致性检测、0为关闭 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"useGlobleTableCheck"</span>&gt;</span>0<span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="comment">&lt;!-- 0 为本地文件方式，1 为数据库方式，2 为时间戳序列方式，3 为分布式ZK ID 生成器，4 为 zk 递增 id 生成。 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"sequnceHandlerType"</span>&gt;</span>1<span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- 数据服务占用端口 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"serverPort"</span>&gt;</span>8066<span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- 管理占用端口, 官方说法是命令行登陆用这个端口进行管理, 但是我用命令行用serverPort也能登陆进行操作 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"managerPort"</span>&gt;</span>9066<span class="tag">&lt;/<span class="name">property</span>&gt;</span> </span><br><span class="line"><span class="comment">&lt;!-- 连接的空闲超时断开时间 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"idleTimeout"</span>&gt;</span>300000<span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- 内网使用默认即可, 应该没人拿来外网访问 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"bindIp"</span>&gt;</span>0.0.0.0<span class="tag">&lt;/<span class="name">property</span>&gt;</span> </span><br><span class="line"><span class="comment">&lt;!-- 查询返回结果集长度报警阈值, 超过日志输出警告 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"frontWriteQueueSize"</span>&gt;</span>4096<span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- 系统可用的线程数,默认值为机器 CPU 核心线程数, 可适当调高 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"processors"</span>&gt;</span>32<span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- 分布式事务开关 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"handleDistributedTransactions"</span>&gt;</span>0<span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p><code>useGlobleTableCheck</code> 含义<br>全局表用于存放字典类低频增删改及数据量不大的表, 供给join使用.<br>开启后需要手动在配置成全局表的表结构里增加<code>_mycat_op_time</code>字段, 如果是通过mycat发送的建表语句, 则会自动改写增加该字段.<br>原理是拦截CUD语句, 自动改写给<code>_mycat_op_time</code>字段加入当前时间戳的值.<br>然后通过定时器定时执行</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">select count(*) as record_count from user;</span><br><span class="line">select max(_mycat_op_time) as max_timestamp from user;</span><br></pre></td></tr></table></figure>
+<p>两个查询, 然后对比所有节点上全局表返回结果是否一致, 从而完成一致性检测.<br>当然, 这个配置只能检测, 不能自动修复, 只是帮助我们及时发现问题.</p>
+<p><code>sequnceHandlerType</code> 含义<br>全局ID生成方式, 用于数据库自增主键.<br>使用数据库自带的主键自增功能, 在跨库跨节点分片中可能出现insert后返回不准确的问题.<br>所以需要使用自增主键的话, 必须使用Mycat提供的自增策略.<br>0是禁止使用的, 因为每次重启服务后ID会重置.<br>1是使用数据库表实现, 将起始ID和步长存放在数据库中, 每次读取步长量的ID并更新ID起始值, 用完再来.<br>2本地时间戳方式, 64位ID, 太长了, 我反正不会用…<br>3分布式 ZK ID 生成器, 依然是64位ID, 好处是高吞吐量并且保证机房内极限状态获取17年不重复.<br>4Zk 递增方式, 没用过不知道.</p>
+<p>这里只讲一下2的配置, 大部分人的选择.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> MYCAT_SEQUENCE (<span class="keyword">name</span> <span class="built_in">VARCHAR</span>(<span class="number">50</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,current_value <span class="built_in">INT</span> <span class="keyword">NOT</span></span><br><span class="line"><span class="literal">NULL</span>,<span class="keyword">increment</span> <span class="built_in">INT</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="number">100</span>, PRIMARY <span class="keyword">KEY</span>(<span class="keyword">name</span>)) <span class="keyword">ENGINE</span>=<span class="keyword">InnoDB</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">--GLOBAL表示该条数据为所有没有单独配置ID数据的表提供自增主键, 必须全大写.</span></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> MYCAT_SEQUENCE(<span class="keyword">name</span>,current_value,<span class="keyword">increment</span>) <span class="keyword">VALUES</span> (‘<span class="keyword">GLOBAL</span>’, <span class="number">100000</span>, <span class="number">100</span>);</span><br><span class="line"><span class="comment">--ORDER表示该数据只为ORDER表提供自增主键, 必须全大写.</span></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> MYCAT_SEQUENCE(<span class="keyword">name</span>,current_value,<span class="keyword">increment</span>) <span class="keyword">VALUES</span> (‘<span class="keyword">ORDER</span>’, <span class="number">100000</span>, <span class="number">100</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">--10000为起始ID, 100位步长, 即每次取出数量, insert量大可提高步长降低该表使用量.</span></span><br><span class="line"></span><br><span class="line"><span class="comment">--增加三个存储过程, 和表必须放在同一个库中.</span></span><br><span class="line"><span class="keyword">DROP</span> <span class="keyword">FUNCTION</span> <span class="keyword">IF</span> <span class="keyword">EXISTS</span> mycat_seq_currval;</span><br><span class="line">DELIMITER</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">FUNCTION</span> mycat_seq_currval(seq_name <span class="built_in">VARCHAR</span>(<span class="number">50</span>)) <span class="keyword">RETURNS</span> <span class="built_in">varchar</span>(<span class="number">64</span>) <span class="keyword">CHARSET</span> utf<span class="number">-8</span></span><br><span class="line"><span class="keyword">DETERMINISTIC</span></span><br><span class="line"><span class="keyword">BEGIN</span></span><br><span class="line"><span class="keyword">DECLARE</span> retval <span class="built_in">VARCHAR</span>(<span class="number">64</span>);</span><br><span class="line"><span class="keyword">SET</span> retval=“<span class="number">-999999999</span>,<span class="literal">null</span>”;</span><br><span class="line"><span class="keyword">SELECT</span> <span class="keyword">concat</span>(<span class="keyword">CAST</span>(current_value <span class="keyword">AS</span> <span class="built_in">CHAR</span>),“,”,<span class="keyword">CAST</span>(<span class="keyword">increment</span> <span class="keyword">AS</span> <span class="built_in">CHAR</span>)) <span class="keyword">INTO</span> retval <span class="keyword">FROM</span></span><br><span class="line">MYCAT_SEQUENCE <span class="keyword">WHERE</span> <span class="keyword">name</span> = seq_name;</span><br><span class="line">RETURN retval;</span><br><span class="line"><span class="keyword">END</span></span><br><span class="line">DELIMITER;</span><br><span class="line"></span><br><span class="line"><span class="keyword">DROP</span> <span class="keyword">FUNCTION</span> <span class="keyword">IF</span> <span class="keyword">EXISTS</span> mycat_seq_setval;</span><br><span class="line">DELIMITER</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">FUNCTION</span> mycat_seq_setval(seq_name <span class="built_in">VARCHAR</span>(<span class="number">50</span>),<span class="keyword">value</span> <span class="built_in">INTEGER</span>) <span class="keyword">RETURNS</span> <span class="built_in">varchar</span>(<span class="number">64</span>)</span><br><span class="line"><span class="keyword">CHARSET</span> utf<span class="number">-8</span></span><br><span class="line"><span class="keyword">DETERMINISTIC</span></span><br><span class="line"><span class="keyword">BEGIN</span></span><br><span class="line"><span class="keyword">UPDATE</span> MYCAT_SEQUENCE</span><br><span class="line"><span class="keyword">SET</span> current_value = <span class="keyword">value</span></span><br><span class="line"><span class="keyword">WHERE</span> <span class="keyword">name</span> = seq_name;</span><br><span class="line">RETURN mycat_seq_currval(seq_name);</span><br><span class="line"><span class="keyword">END</span></span><br><span class="line">DELIMITER; </span><br><span class="line"></span><br><span class="line"><span class="keyword">DROP</span> <span class="keyword">FUNCTION</span> <span class="keyword">IF</span> <span class="keyword">EXISTS</span> mycat_seq_nextval;</span><br><span class="line">DELIMITER</span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">FUNCTION</span> mycat_seq_nextval(seq_name <span class="built_in">VARCHAR</span>(<span class="number">50</span>)) <span class="keyword">RETURNS</span> <span class="built_in">varchar</span>(<span class="number">64</span>)<span class="keyword">CHARSET</span> utf<span class="number">-8</span></span><br><span class="line"><span class="keyword">DETERMINISTIC</span></span><br><span class="line"><span class="keyword">BEGIN</span></span><br><span class="line"><span class="keyword">UPDATE</span> MYCAT_SEQUENCE</span><br><span class="line"><span class="keyword">SET</span> current_value = current_value + <span class="keyword">increment</span> <span class="keyword">WHERE</span> <span class="keyword">name</span> = seq_name;</span><br><span class="line">RETURN mycat_seq_currval(seq_name);</span><br><span class="line"><span class="keyword">END</span></span><br><span class="line">DELIMITER;</span><br></pre></td></tr></table></figure>
+<p>全部删掉<code>sequence_db_conf.properties</code>里的内容, 然后添加</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">GLOBAL=test_dn</span><br><span class="line">ORDER=test_dn</span><br></pre></td></tr></table></figure>
+<p>这里就是刚刚insert的两条数据里对应的表绑定datahost, datahost是啥后面会讲到.</p>
+<p><code>handleDistributedTransactions</code><br>0 为不过滤分布式事务 1 为过滤分布式事务（如果分布式事务内只涉及全局表，则不过滤）2 为不过滤分布式事务,但是记录分布式事务日志<br>官方说明有点难理解, 害我测试了一下才明白. 过滤等于是禁用的意思.<br>0就是开启分布式事务, 1是禁止分布式事务, 如果事务内操作的都是全局表则不禁用. 2是开启分布式事务同时开启日志.</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">user</span> <span class="attr">name</span>=<span class="string">"root"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"password"</span>&gt;</span>jiangwei<span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"schemas"</span>&gt;</span>userOrder<span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"readOnly"</span>&gt;</span>false<span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">&lt;!-- 表级 DML 权限设置 --&gt;</span></span><br><span class="line">    <span class="comment">&lt;!--    </span></span><br><span class="line"><span class="comment">    &lt;privileges check="false"&gt;</span></span><br><span class="line"><span class="comment">      &lt;schema name="TESTDB" dml="0110" &gt;</span></span><br><span class="line"><span class="comment">        &lt;table name="tb01" dml="0000"&gt;&lt;/table&gt;</span></span><br><span class="line"><span class="comment">        &lt;table name="tb02" dml="1111"&gt;&lt;/table&gt;</span></span><br><span class="line"><span class="comment">      &lt;/schema&gt;</span></span><br><span class="line"><span class="comment">    &lt;/privileges&gt;   </span></span><br><span class="line"><span class="comment">     --&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">user</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>这个用于配置登陆使用的用户, <code>schemas</code>则是填入开放访问的多个分片合并出来的虚拟表的虚拟库, 允许填入多个, 逗号隔开. 里面填入的内容在后面马上会讲到的<code>schema.xml</code>文件里配置.</p>
+<p><code>server.xml</code>的关键配置及含义到这就讲完了.</p>
+<p><strong>schema.xml</strong></p>
+<p>首先讲一下我模拟实现的需求, 有<code>sys_user</code>、<code>sys_role</code>、<code>sys_order</code>三个表.<br>根据功能进行垂直分库后, 分成了两个库.<br><code>sys_user</code>、<code>sys_role</code>所在的<code>user</code>库和<code>sys_order</code>所在的<code>order</code>库.<br><code>user</code>库放在192.168.1.56(后简称56)这台服务器上, <code>order</code>库放在localhost本地.<br>然后考虑<code>sys_order</code>表数据量增大, 进行了水平分片, 于是又产生了一个<code>order2</code>库.</p>
+<p>最后为了进一步增加可用性, 又增加了两台服务器分别作为56和localhost的从库, 进行读写分离, 主库只负担写入, 从库只负责读去.</p>
+<p>以上就是下面这段配置实现的效果.</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">schema</span> <span class="attr">name</span>=<span class="string">"userOrder"</span> <span class="attr">checkSQLschema</span>=<span class="string">"false"</span> <span class="attr">sqlMaxLimit</span>=<span class="string">"1000"</span>&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;<span class="name">table</span> <span class="attr">name</span>=<span class="string">"sys_user"</span> <span class="attr">dataNode</span>=<span class="string">"user"</span> <span class="attr">primaryKey</span>=<span class="string">"id"</span> <span class="attr">autoIncrement</span>=<span class="string">"true"</span> &gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">childTable</span> <span class="attr">name</span>=<span class="string">"orders"</span> <span class="attr">joinKey</span>=<span class="string">"user_id"</span> <span class="attr">parentKey</span>=<span class="string">"id"</span>/&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">table</span>&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;<span class="name">table</span> <span class="attr">name</span>=<span class="string">"sys_role"</span> <span class="attr">dataNode</span>=<span class="string">"user"</span> <span class="attr">primaryKey</span>=<span class="string">"id"</span> <span class="attr">autoIncrement</span>=<span class="string">"true"</span> /&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;<span class="name">table</span> <span class="attr">name</span>=<span class="string">"sys_order"</span> <span class="attr">dataNode</span>=<span class="string">"order_dn1,order_dn2"</span> <span class="attr">autoIncrement</span>=<span class="string">"true"</span> <span class="attr">rule</span>=<span class="string">"mod-long2"</span> <span class="attr">primaryKey</span>=<span class="string">"id"</span> /&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">schema</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">dataNode</span> <span class="attr">name</span>=<span class="string">"user"</span> <span class="attr">dataHost</span>=<span class="string">"userHost"</span> <span class="attr">database</span>=<span class="string">"user"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dataNode</span> <span class="attr">name</span>=<span class="string">"order_dn1"</span> <span class="attr">dataHost</span>=<span class="string">"orderHost"</span> <span class="attr">database</span>=<span class="string">"order"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dataNode</span> <span class="attr">name</span>=<span class="string">"order_dn2"</span> <span class="attr">dataHost</span>=<span class="string">"orderHost"</span> <span class="attr">database</span>=<span class="string">"order2"</span> /&gt;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">dataHost</span> <span class="attr">name</span>=<span class="string">"userHost"</span> <span class="attr">maxCon</span>=<span class="string">"1000"</span> <span class="attr">minCon</span>=<span class="string">"10"</span> <span class="attr">balance</span>=<span class="string">"3"</span></span></span><br><span class="line"><span class="tag">      <span class="attr">writeType</span>=<span class="string">"0"</span> <span class="attr">dbType</span>=<span class="string">"mysql"</span> <span class="attr">dbDriver</span>=<span class="string">"native"</span> <span class="attr">switchType</span>=<span class="string">"2"</span>  <span class="attr">slaveThreshold</span>=<span class="string">"100"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">heartbeat</span>&gt;</span>show slave status<span class="tag">&lt;/<span class="name">heartbeat</span>&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;<span class="name">writeHost</span> <span class="attr">host</span>=<span class="string">"hostM1"</span> <span class="attr">url</span>=<span class="string">"192.168.1.56:3306"</span> <span class="attr">user</span>=<span class="string">"root"</span> <span class="attr">password</span>=<span class="string">"Your PWD"</span> &gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">readHost</span> <span class="attr">host</span>=<span class="string">"hostS2"</span> <span class="attr">url</span>=<span class="string">"192.168.1.56:3307"</span> <span class="attr">user</span>=<span class="string">"root"</span> <span class="attr">password</span>=<span class="string">"Your PWD"</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">writeHost</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">dataHost</span>&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- rule2 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dataHost</span> <span class="attr">name</span>=<span class="string">"orderHost"</span> <span class="attr">maxCon</span>=<span class="string">"1000"</span> <span class="attr">minCon</span>=<span class="string">"10"</span> <span class="attr">balance</span>=<span class="string">"3"</span></span></span><br><span class="line"><span class="tag">      <span class="attr">writeType</span>=<span class="string">"0"</span> <span class="attr">dbType</span>=<span class="string">"mysql"</span> <span class="attr">dbDriver</span>=<span class="string">"native"</span> <span class="attr">switchType</span>=<span class="string">"2"</span>  <span class="attr">slaveThreshold</span>=<span class="string">"100"</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">heartbeat</span>&gt;</span>show slave status<span class="tag">&lt;/<span class="name">heartbeat</span>&gt;</span></span><br><span class="line"></span><br><span class="line">  <span class="tag">&lt;<span class="name">writeHost</span> <span class="attr">host</span>=<span class="string">"hostM1"</span> <span class="attr">url</span>=<span class="string">"localhost:3306"</span> <span class="attr">user</span>=<span class="string">"root"</span> <span class="attr">password</span>=<span class="string">"Your PWD"</span> &gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">readHost</span> <span class="attr">host</span>=<span class="string">"hostS2"</span> <span class="attr">url</span>=<span class="string">"192.168.1.56:3308"</span> <span class="attr">user</span>=<span class="string">"root"</span> <span class="attr">password</span>=<span class="string">"Your PWD"</span> /&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">writeHost</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">dataHost</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p><code>&lt;dataHost /&gt;</code> 表示节点主机, 一个节点主机不代表一台主机, 可以配置多台主机, 即多个<code>&lt;writeHost /&gt;</code>.<br><code>balance</code>属性表示负载均衡类型, 0为不开启. 1为除了 <code>readHost</code>, 空闲的<code>writeHost</code>也参与Select的负载均衡. 2为Select在所有<code>readHost</code>、<code>writeHost</code>上随机分发. 3为Select操作只在<code>writeHost</code>内的<code>readHost</code>上随机分发.<br>可见1是用于双主同步模式, 而3才是用于完全读写分离模式, 所以只有3能满足刚刚模拟的需求.</p>
+<p><code>writeType</code>已废弃, 用<code>switchType</code>替代, 默认值即可.</p>
+<p><code>switchType</code>属性表示是否开启自动切换, 需要读写分离的话必须开启, 默认1不开启.<br>2为开启, 开启后<code>heartbeat</code>心跳检测语句必须改为<code>show slave status</code>, 这里其实就帮你做了可用性验证.<br>当同步线程出问题挂掉后, 还继续在从库查询必然会出BUG, 所以根据心跳检测返回可决定是否切换从库进行查询.</p>
+<p><code>heartbeat</code>属性上面已经提到过了, 就是字面含义, 用来检测被代理的物理库的活性. 所使用的语句不考虑读写分离的节点, 可以使用select 1这种来替换.</p>
+<p><code>&lt;writeHost /&gt;</code>标签用于配置物理库连接数据, 很好理解.<br><code>&lt;readHost /&gt;</code>子标签用于配置读写分离后负责读的物理库连接数据.</p>
+<p><code>&lt;dataNode /&gt;</code> 表示分片节点, 用于配置和主机节点的绑定关系.<br>根据之前模拟的需求, 如果<code>sys_order</code>库不进行水平分片的话, 那么<code>&lt;dataNode /&gt;</code>节点就只有两个, 一个<code>user</code>、一个<code>order</code>.<br><code>sys_order</code>分片之后多出一个物理库<code>order2</code>, 所以有了第三个<code>&lt;dataNode /&gt;</code>.</p>
+<p><code>&lt;schema /&gt;</code> 在讲<code>server.xml</code>中提到了一次, 这里就是使用分片组合成虚拟表的虚拟库.<br><code>checkSQLschema=&quot;false&quot;</code>属性是用来兼容DB工具访问的属性, 设为true才兼容类似Navicat的访问, 我开启后使用Navicat访问依然出现各种问题, 一度让我以为我哪里配置出问题, 浪费了一两个小时, 所以不用理它.</p>
+<p><code>&lt;table/ &gt;</code> 标签就是配置由分片节点组成虚拟表, 如果组成虚拟表的分片节点只有一个, 那么sql的执行就只是进行了一次转发, 如果配置了多个, 那么sql就需要经过Mycat的改写, 比如说根据Id查Order, 因为<code>sys_order</code>表进行了水平分片, 所以没人知道对应这个Id的数据在哪个分片上, 所以需要改写到两个分片上去查询.<br>不过Mycat加入了热点缓存机制<code>TableID2DataNodeCache</code>, 缓存主键命中的路由, 下次再查询该主键就会直接命中该路由.</p>
+<p><code>dataNode</code>属性就是用来绑定分片的了, 可绑定多个, 已多次提到.</p>
+<p><code>primaryKey</code> 告知Mycat分片对应物理表的主键, 方便进行路由计算.</p>
+<p><code>autoIncrement</code> 开启主键自增, 主键自增需要的配置上面也讲过了.</p>
+<p><code>&lt;childTable /&gt;</code> 这个子表标签, 我花了些功夫才理解是什么意思.<br>官方说是用来实现ER Join, 通俗理解就是用来实现分片后的表之间进行的join并保证效率.<br>试想看看, 当表水平分片后, 数据都不知道在哪个分片里, 然后还要跟另外一个库里的表去join查询, 这特么只能把全表查出来才能通过代码完成join操作了吧, 但是这样还谈什么高可用.<br>所以官方用了一个比较鸡贼的方式, 还是用之前模拟的需求来举例.<br>首先根据用户Id对<code>sys_user</code>和<code>sys_order</code>分片, 通过配置子表的方式告知从属关系及外键关系, 然后在insert新order时, 会根据用户Id查询找到该用户所在分片, 然后把这个order也insert到同一个分片上去, 从而以后查询用户及用户下所有订单时的join可以直接在同一个库中用最普通的join完成. 这样及实现了join的需求, 也不会有性能问题.</p>
+<p>但是又带来了一个问题, 应该必须两张表都分片才能使用该功能.<br>因为这个疑问, 所以之前的配置里暂时没有包含这个功能的配置, 里面的<code>&lt;childTable /&gt;</code>只是举例, 并无实际效果. 等后面验证后在来更新.</p>
+<p><code>rule</code>属性就是用来配置分片规则的了, 取值对应马上开始讲的最后一个配置文件. </p>
+<p>啊啊啊, 终于到了最后一个配置文件.</p>
+<p><strong>rule.xml</strong></p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">tableRule</span> <span class="attr">name</span>=<span class="string">"rule2"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">rule</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">columns</span>&gt;</span>user_id<span class="tag">&lt;/<span class="name">columns</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">algorithm</span>&gt;</span>func1<span class="tag">&lt;/<span class="name">algorithm</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">rule</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;/<span class="name">tableRule</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>里面<code>&lt;tableRule/ &gt;</code>标签的<code>name</code>属性就是填入<code>schema.xml</code>里<code>&lt;table/ &gt;</code>标签里的<code>rule</code>属性的值.</p>
+<p>可以看到该配置文件中<code>&lt;tableRule/ &gt;</code>有很多个, 子标签<code>&lt;columns /&gt;</code>里放的是用于分片的字段, <code>&lt;algorithm /&gt;</code>则是调用的分片方法. 取值对应文件下方的<code>&lt;function /&gt;</code>标签.</p>
+<p><code>sharding-by-intfile</code> 枚举分片, 通过配置<code>partition-hash-int.txt</code>完成按固定条件分片, 例如按国家、省份或地区分片.</p>
+<p><code>&quot;mod-long</code> 求模分片, 按分片字段的值十进制求模分片.</p>
+<p><code>rule1</code> 固定hash分片. 求模分片的高阶版, 用分片字段的二进制低 10 位进行计算, 直接求模如果有10个分片, 当连续insert 1到10时就会依此分片到10个分片里, 使用此规则可避免此情况, 降低跨库跨节点事务的性能消耗.<br>但是如果你的分片就只有两三个, 就还不如直接求模了, 降低运算量.</p>
+<p><code>auto-sharding-long</code> 按分片字段范围分片, 在<code>autopartition-long.txt</code>配置范围规则, 例如: 0-1000000=0, 表示分片字段值在这个范围内分片到第一个节点.</p>
+<p><code>sharding-by-pattern</code> 求模+范围组合模式, 求模同时控制数据落点. 范围是这是求模之后余数的范围.</p>
+<p><code>sharding-by-prefixpattern</code> 截取指定位数字母转ASCII码再求模+范围分片方式. </p>
+<p><code>sharding-by-substring</code> 使用者自行指定分片, 根据分片字段的值配置截取位置获得的结果来分片, 结果必须是数字.</p>
+<p><code>sharding-by-date</code> 按天分片, 变态增量数据专用之一, 可使用<code>sPartionDay</code>属性设置多少天分一片.</p>
+<p>暂时实践到的分片规则就这么多, 常用的也差不多就这些了, 还支持很多其他分片规则, 具体可在官方用户手册中查看.</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>Mycat功能细化做的很不错, 颗粒度扣得很细, 基本上能想到的业务场景都能够配置出来, 不过这也带来一个问题, 就是需要掌握的配置量就比较庞大了, 不说能记住, 起码都必须过一遍脑子, 知道有这么些个玩意儿和原理, 这样在遇到需求时才能联想到mycat是否能够配得出来, 遇到问题时才能快速分析找到问题点, 或者说最大限度上预防出问题.<br>苦逼归苦逼, 但是也只有熟练掌握了数据库中间件的原理思维, 并且能熟练运用这些数据库中间件, 你才有资格说你已经能够驾驭高可用微服务了.</p>
+<p>辞职了, 最近又要开始找工作了, 最后祝自己顺利吧！Thanks for your reading。</p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2019/04/24/mycat-learning-exp/">Mycat数据库中间件上手实践及分布式事务和分库分片实现</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">Victor Jones</a></p>
+        <p><span>发布时间:</span>2019-04-24, 21:21:00</p>
+        <p><span>最后更新:</span>2019-04-25, 08:50:23</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2019/04/24/mycat-learning-exp/" title="Mycat数据库中间件上手实践及分布式事务和分库分片实现">https://veevv.com/2019/04/24/mycat-learning-exp/</a>
+            <span class="copy-path" data-clipboard-text="原文: https://veevv.com/2019/04/24/mycat-learning-exp/　　作者: Victor Jones" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target="_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2019/04/24/mysql_main_slave_config/">
+                    MySQL主从同步配置及理解
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#开始正题"><span class="toc-number">2.</span> <span class="toc-text">开始正题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#第一步-准备工作"><span class="toc-number">2.1.</span> <span class="toc-text">第一步 准备工作</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#第二步-关键配置及理解"><span class="toc-number">2.2.</span> <span class="toc-text">第二步 关键配置及理解</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-number">3.</span> <span class="toc-text">总结</span></a></li></ol>
+</div>
+<style>
+    .left-col .switch-btn,
+    .left-col .switch-area {
+        display: none;
+    }
+</style>
+
+<input type="button" id="tocButton" value="隐藏目录" title="点击按钮隐藏或者显示文章目录">
+
+<script>
+    yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+</script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"Mycat数据库中间件上手实践及分布式事务和分库分片实现　| Victor’ Blog　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='https://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+      <!-- 来必力City版安装代码 -->
+<div id="lv-container" data-id="city" data-uid="MTAyMC8zMDc1Ni83MzA4">
+	<script type="text/javascript">
+   (function(d, s) {
+       var j, e = d.getElementsByTagName(s)[0];
+
+       if (typeof LivereTower === 'function') { return; }
+
+       j = d.createElement(s);
+       j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+       j.async = true;
+
+       e.parentNode.insertBefore(j, e);
+   })(document, 'script');
+	</script>
+	<style>
+	#lv-container{
+	    margin:0 22px 0 24px;
+	}
+	</style>
+<noscript> 为正常使用来必力评论功能请激活JavaScript</noscript>
+</div>
+<!-- City版安装代码已完成 -->
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2019/04/24/mysql_main_slave_config/" title="下一篇: MySQL主从同步配置及理解">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/04/24/mycat-learning-exp/">Mycat数据库中间件上手实践及分布式事务和分库分片实现</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/24/mysql_main_slave_config/">MySQL主从同步配置及理解</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/18/go-xormplus-exmaple-and-auto-transaction-impl/">Go语言ORM框架XORM上手实战及全自动事务托管实现(类似Spring)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/13/go-gomybatis-learning-experience/">Go语言的ORM框架GoMybatis的学习经历</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/12/12/how-to-install-tensorflow-on-arm/">如何在arm板(cubieboard)上编译安装tensorflow</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/05/17/how-to-install-mysql5.7-by-yum/">CentOS7如何使用yum安装Mysql5.7</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/03/17/flowable-modeler-integrate/">如何整合Flowable-modeler到自己的项目中</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/06/01/linux-centos-vsftp-configuration/">linux/centos中配置vsftp</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/02/27/java-map-generic-problem/">一个Map泛型的问题</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/01/16/magazine-faq/">深坑浅坑集合</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/30/tomcat-multi-project-start-error/">使用tomcat部署多个项目时, 启动莫名其妙的错, schedulerFactory_Worker-1 memory leak.</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/25/linux-centos-jdk-installation/">linux/centos下安装如何安装JDK</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/25/tomcat-start-error-contextloaderlistener/">使用ContextLoaderListener监听tomcat启动时, tomcat启动报错.</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/10/26/double-eleven-get-coupon/">双十一优惠券 一次性全部领取</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/09/30/mybatis-mapper-xml-reloader/">Mybatis Mapper配置XML文件热加载实现</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/09/23/j2ee-faq/">java常见问题集合</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/09/23/spring-mvc-ajax-json-406/">Spring MVC 使用ajax请求json数据时出现406 Not Acceptable</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/07/27/tomcat-linux-auto-start/">linux中设置tomcat开机启动</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/07/14/common-code-memo/">常用语句备忘</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/07/10/touch.js-baidu-code/">touch.js 百度开源项目.</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/06/26/bootstrap-css/">bootstrap栅格布局样式备忘.</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/06/24/my-first-blog/">我历经百般磨难, 命运各种坎坷的第一篇博文.</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2016-2019 Victor Jones
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style="display:none">
+                        <span id="site-visit">本站到访数: 
+                            <span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>, </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style="display:none">
+                        <span id="page-visit">本页阅读量: 
+                            <span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//lib.baomitu.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script async src="https://busuanzi.ibruce.info//busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>
