@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html>
+<head><meta name="generator" content="Hexo 3.8.0">
+
+    <!--[if lt IE 9]>
+        <style>body {display: none; background: none !important} </style>
+        <meta http-equiv="Refresh" Content="0; url=//outdatedbrowser.com/" />
+    <![endif]-->
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<meta name="author" content="Victor Jones">
+
+
+
+<meta name="description" content="前言最近一直在研究微服务的架构设计, 在研究技术的同时, 从免不了带入业务需求进行考虑, 否则仅凭性能也无法全面的评估这些设计的好坏, 想得多了, 自己都快记不住了, 觉得应该再开一篇博客记录下来, 说不定在记录的时候再次反思又能想到更多更深入更好玩儿的东西.当然, 如果能够帮助到其他为此困扰的人, 那也是极好的. 第一节 说明近期主要是拿to C 电商业务做为观察视角来研究架构设计, 那么核心的">
+<meta name="keywords" content="to C架构设计,电商架构设计">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于to C 电商业务的高并发高可用架构设计">
+<meta property="og:url" content="https://veevv.com/2019/04/26/micro-service-architecture-to-c-desgin/index.html">
+<meta property="og:site_name" content="Victor’ Blog">
+<meta property="og:description" content="前言最近一直在研究微服务的架构设计, 在研究技术的同时, 从免不了带入业务需求进行考虑, 否则仅凭性能也无法全面的评估这些设计的好坏, 想得多了, 自己都快记不住了, 觉得应该再开一篇博客记录下来, 说不定在记录的时候再次反思又能想到更多更深入更好玩儿的东西.当然, 如果能够帮助到其他为此困扰的人, 那也是极好的. 第一节 说明近期主要是拿to C 电商业务做为观察视角来研究架构设计, 那么核心的">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://veevv.com/images/posts/micro-service-architecture-to-c-desgin-1.png">
+<meta property="og:image" content="https://veevv.com/images/posts/micro-service-architecture-to-c-desgin-2.png">
+<meta property="og:updated_time" content="2019-04-30T01:43:40.980Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="基于to C 电商业务的高并发高可用架构设计">
+<meta name="twitter:description" content="前言最近一直在研究微服务的架构设计, 在研究技术的同时, 从免不了带入业务需求进行考虑, 否则仅凭性能也无法全面的评估这些设计的好坏, 想得多了, 自己都快记不住了, 觉得应该再开一篇博客记录下来, 说不定在记录的时候再次反思又能想到更多更深入更好玩儿的东西.当然, 如果能够帮助到其他为此困扰的人, 那也是极好的. 第一节 说明近期主要是拿to C 电商业务做为观察视角来研究架构设计, 那么核心的">
+<meta name="twitter:image" content="https://veevv.com/images/posts/micro-service-architecture-to-c-desgin-1.png">
+
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+
+    <link rel="alternative" href="/atom.xml" title="Victor’ Blog" type="application/atom+xml">
+
+
+
+    <link rel="shortcut icon" href="/favicon.png">
+
+
+
+    <link href="//lib.baomitu.com/animate.css/3.5.1/animate.min.css" rel="stylesheet">
+
+
+
+    <link href="//lib.baomitu.com/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+
+
+
+    <script src="//lib.baomitu.com/pace/1.0.2/pace.min.js"></script>
+    <link href="//cdn.bootcss.com/pace/1.0.2/themes/blue/pace-theme-minimal.css" rel="stylesheet">
+
+
+<link rel="stylesheet" href="/css/style.css">
+
+
+
+<link href="//lib.baomitu.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+
+
+<title>基于to C 电商业务的高并发高可用架构设计 | Victor’ Blog</title>
+
+<script src="//lib.baomitu.com/jquery/2.2.4/jquery.min.js"></script>
+<script src="//lib.baomitu.com/clipboard.js/1.5.10/clipboard.min.js"></script>
+
+<script>
+    var yiliaConfig = {
+        fancybox: true,
+        animate: true,
+        isHome: false,
+        isPost: true,
+        isArchive: false,
+        isTag: false,
+        isCategory: false,
+        open_in_new: false,
+        fancybox_js: "//lib.baomitu.com/fancybox/2.1.5/jquery.fancybox.min.js",
+        scrollreveal: "//lib.baomitu.com/scrollReveal.js/3.1.4/scrollreveal.min.js",
+        search: false
+    };
+</script>
+
+
+
+
+
+    <script>
+        yiliaConfig.jquery_ui = [true, "//lib.baomitu.com/jqueryui/1.10.4/jquery-ui.min.js", "//lib.baomitu.com/jqueryui/1.10.4/css/jquery-ui.min.css"];
+    </script>
+
+
+
+    <script> yiliaConfig.rootUrl = "\/";</script>
+
+
+
+
+
+
+</head></html>
+<body>
+  <div id="container">
+    <div class="left-col">
+    <div class="overlay"></div>
+<div class="intrude-less">
+    <header id="header" class="inner">
+        <a href="/" class="profilepic">
+            <img src="https://en.gravatar.com/avatar/d8feb2f92e88467381204ad8ce70e97b?s=150" class="animated zoomIn">
+        </a>
+        <hgroup>
+          <h1 class="header-author"><a href="/">Victor Jones</a></h1>
+        </hgroup>
+
+        
+        <p class="header-subtitle">一只小小Coder在自说自话</p>
+        
+
+        
+
+
+        
+            <div id="switch-btn" class="switch-btn">
+                <div class="icon">
+                    <div class="icon-ctn">
+                        <div class="icon-wrap icon-house" data-idx="0">
+                            <div class="birdhouse"></div>
+                            <div class="birdhouse_holes"></div>
+                        </div>
+                        <div class="icon-wrap icon-ribbon hide" data-idx="1">
+                            <div class="ribbon"></div>
+                        </div>
+                        
+                        <div class="icon-wrap icon-link hide" data-idx="2">
+                            <div class="loopback_l"></div>
+                            <div class="loopback_r"></div>
+                        </div>
+                        
+                        
+                        <div class="icon-wrap icon-me hide" data-idx="3">
+                            <div class="user"></div>
+                            <div class="shoulder"></div>
+                        </div>
+                        
+                    </div>
+                    
+                </div>
+                <div class="tips-box hide">
+                    <div class="tips-arrow"></div>
+                    <ul class="tips-inner">
+                        <li>菜单</li>
+                        <li>标签</li>
+                        
+                        <li>友情链接</li>
+                        
+                        
+                        <li>关于我</li>
+                        
+                    </ul>
+                </div>
+            </div>
+        
+
+        <div id="switch-area" class="switch-area">
+            <div class="switch-wrap">
+                <section class="switch-part switch-part1">
+                    <nav class="header-menu">
+                        <ul>
+                        
+                            <li><a href="/">主页</a></li>
+                        
+                            <li><a href="/archives/">所有文章</a></li>
+                        
+                            <li><a href="/tags/">标签云</a></li>
+                        
+                            <li><a href="javascript:$('.tips-inner li:last').trigger('click')">关于我</a></li>
+                        </ul>
+                    </nav>
+                    <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="http://mail.qq.com/cgi-bin/qm_share?t=qm_mailme&email=v@veevv.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" href="#" title="GitHub"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                        </ul>
+                    </nav>
+                </section>
+                
+                
+                <section class="switch-part switch-part2">
+                    <div class="widget tagcloud" id="js-tagcloud">
+                        <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/ajax-parsererror/">$.ajax parsererror</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/406-Not-Acceptable/">406 Not Acceptable</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/ContextLoaderListener-启动报错/">ContextLoaderListener 启动报错</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/JDK-安装/">JDK 安装</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Map泛型变了/">Map泛型变了</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Map泛型失效/">Map泛型失效</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/MySQL主从同步和读写分离/">MySQL主从同步和读写分离</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/SpringMVC-406/">SpringMVC 406</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/bootstrap/">bootstrap</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/centos/">centos</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/centos-jdk安装/">centos jdk安装</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/col-xl/">col-xl</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/flowable-modeler/">flowable-modeler</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/go-orm/">go orm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/gomybatis/">gomybatis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/j2ee/">j2ee</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/j2ee-faq/">j2ee faq</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/java/">java</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/jquery/">jquery</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/js/">js</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/linux/">linux</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/linux-JDK安装/">linux JDK安装</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mapper-热加载/">mapper 热加载</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/memory-leak/">memory leak</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mybatis/">mybatis</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mybatis-热加载/">mybatis 热加载</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mycat-实践/">mycat 实践</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mycat-数据库中间件/">mycat 数据库中间件</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql/">mysql</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql5-8-zip安装/">mysql5.8 zip安装</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql5-8-解压版安装/">mysql5.8 解压版安装</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql5-8zip安装/">mysql5.8zip安装</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql5-8解压版安装/">mysql5.8解压版安装</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql启动失败/">mysql启动失败</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/mysql自动备份/">mysql自动备份</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/schedulerFactory-Worker-1/">schedulerFactory_Worker-1</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/selinux/">selinux</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/spring/">spring</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/spring-mvc-json-406/">spring mvc json 406</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/to-C架构设计/">to C架构设计</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tomcat/">tomcat</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tomcat-启动报错/">tomcat 启动报错</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tomcat-多项目-启动报错/">tomcat 多项目 启动报错</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tomcat启动报错/">tomcat启动报错</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/tomcat多项目启动报错/">tomcat多项目启动报错</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/touch/">touch</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/touch-js/">touch.js</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/vsftp/">vsftp</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/xorm-xormplus/">xorm xormplus</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/xorm-事务托管/">xorm 事务托管</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/xorm-全自动事务/">xorm 全自动事务</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/xorm-嵌套事务/">xorm 嵌套事务</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/yum安装Mysql5-7/">yum安装Mysql5.7</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/双十一/">双十一</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/双十一优惠券/">双十一优惠券</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/双十一优惠卷/">双十一优惠卷</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/布局/">布局</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/开启启动/">开启启动</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/栅格/">栅格</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/电商架构设计/">电商架构设计</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/编译tensorflow-On-Arm/">编译tensorflow On Arm</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/自动启动/">自动启动</a></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/读写分离/">读写分离</a></li></ul>
+                    </div>
+                </section>
+                
+                
+                
+                <section class="switch-part switch-part3">
+                    <div id="js-friends">
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://hexo.io">Hexo</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="https://pages.github.com/">GitHub</a>
+                    
+                      <a target="_blank" class="main-nav-link switch-friends-link" href="http://moxfive.xyz/">MOxFIVE</a>
+                    
+                    </div>
+                </section>
+                
+
+                
+                
+                <section class="switch-part switch-part4">
+                
+                    <div id="js-aboutme">一只低调的小程序猿, 10年+Java相关开发经验, 6年+项目及团队管理经验, 其它擅长语言HTML(HTML4/5)、SQL、JavaScript、Python、GoLang, 拥有强大的自驱动力和学习能力, 乐于迎接挑战且善于完成挑战。</div>
+                </section>
+                
+            </div>
+        </div>
+    </header>                
+</div>
+    </div>
+    <div class="mid-col">
+      <nav id="mobile-nav">
+      <div class="overlay">
+          <div class="slider-trigger"></div>
+          <h1 class="header-author js-mobile-header hide"><a href="/" title="回到主页">Victor Jones</a></h1>
+      </div>
+    <div class="intrude-less">
+        <header id="header" class="inner">
+            <a href="/" class="profilepic">
+                <img src="https://en.gravatar.com/avatar/d8feb2f92e88467381204ad8ce70e97b?s=150" class="animated zoomIn">
+            </a>
+            <hgroup>
+              <h1 class="header-author"><a href="/" title="回到主页">Victor Jones</a></h1>
+            </hgroup>
+            
+            <p class="header-subtitle">一只小小Coder在自说自话</p>
+            
+            <nav class="header-menu">
+                <ul>
+                
+                    <li><a href="/">主页</a></li>
+                
+                    <li><a href="/archives/">所有文章</a></li>
+                
+                    <li><a href="/tags/">标签云</a></li>
+                
+                <div class="clearfix"></div>
+                </ul>
+            </nav>
+            <nav class="header-nav">
+                        <ul class="social">
+                            
+                                <a class="fa Email" target="_blank" href="http://mail.qq.com/cgi-bin/qm_share?t=qm_mailme&email=v@veevv.com" title="Email"></a>
+                            
+                                <a class="fa GitHub" target="_blank" href="#" title="GitHub"></a>
+                            
+                                <a class="fa RSS" target="_blank" href="/atom.xml" title="RSS"></a>
+                            
+                        </ul>
+            </nav>
+        </header>                
+    </div>
+    <link class="menu-list" tags="标签" friends="友情链接" about="关于我">
+</nav>
+      <div class="body-wrap"><article id="post-micro-service-architecture-to-c-desgin" class="article article-type-post" itemscope itemprop="blogPost">
+  
+    <div class="article-meta">
+      <a href="/2019/04/26/micro-service-architecture-to-c-desgin/" class="article-date">
+      <time datetime="2019-04-26T12:07:00.000Z" itemprop="datePublished">2019-04-26</time>
+</a>
+    </div>
+  
+  <div class="article-inner">
+    
+      <input type="hidden" class="isFancy">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      基于to C 电商业务的高并发高可用架构设计
+    </h1>
+  
+
+      </header>
+      
+      <div class="article-info article-info-post">
+        
+    <div class="article-category tagcloud">
+    <a class="article-category-link" href="/categories/杂七杂八/">杂七杂八</a>
+    </div>
+
+
+        
+    <div class="article-tag tagcloud">
+        <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/to-C架构设计/">to C架构设计</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/电商架构设计/">电商架构设计</a></li></ul>
+    </div>
+
+        <div class="clearfix"></div>
+      </div>
+      
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+          
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>最近一直在研究微服务的架构设计, 在研究技术的同时, 从免不了带入业务需求进行考虑, 否则仅凭性能也无法全面的评估这些设计的好坏, 想得多了, 自己都快记不住了, 觉得应该再开一篇博客记录下来, 说不定在记录的时候再次反思又能想到更多更深入更好玩儿的东西.<br>当然, 如果能够帮助到其他为此困扰的人, 那也是极好的.</p>
+<h3 id="第一节-说明"><a href="#第一节-说明" class="headerlink" title="第一节 说明"></a>第一节 说明</h3><p>近期主要是拿to C 电商业务做为观察视角来研究架构设计, 那么核心的设计观点自然也主要围绕此展开.</p>
+<p><strong>另外需要提前强调, 直到本文结束宣布结果前, 都只是思维推导的过程, 切勿片面取之.</strong></p>
+<h3 id="第二节-了解过去"><a href="#第二节-了解过去" class="headerlink" title="第二节 了解过去"></a>第二节 了解过去</h3><a id="more"></a>
+<p>首先我们先来看一张传统架构的设计图.<br><img src="https://veevv.com/images/posts/micro-service-architecture-to-c-desgin-1.png" alt="结构图"></p>
+<p>这是一种最经典的设计, 被使用了几十年的设计.<br>这种架构在功能上进行了分包, 所以虽然是提供整体服务, 但是内部功能模块依然是相对清晰的.<br>所以无论是前期设计和开发, 还是后期的迭代和维护, 因为都在一个项目中而变的简单方便.<br>在互联网发展早期, 也就是我们刚开始玩梦幻西游和魔兽世界的时代, 有谁会去知道高并发、高可用、负载均衡这些词汇? 在那个家里有电脑就是大土豪的时代, 做架构设计的人们根本不用考虑这些东西. 可是到了如今, 问题来了.</p>
+<p>3G4G的普及, 让中国人直接跳过了个人电脑普及的阶段, 直接进入移动互联网时代. 从互联网发展了近10年才有的两亿网民, 两三年就翻到了五六亿, 到18年更是夸张到突破八亿.</p>
+<p>传统的架构设计在这样的环境下就开始显得捉襟见肘, 即使上集群, 同时接受请求量起来了, 数据库也处理不过来, 即使数据也上集群了, 动不动单表过千万的数据量也会让随便一个查询就把硬盘IO和CPU占满.<br>所以, 很多时候经典往往也代表着过时.</p>
+<p>当然, 过时的原因也不仅仅只有上述这一点.<br>很多采用这种架构设计的项目经过数年的发展, 每一个功能都经过了两三个人的手, 甚至有的功能还要多得多, 其中总会有一些没有完全搞清楚状况的人写的一些代码, 而往往就是这些代码极大增强了功能模块与功能模块之间的耦合性. 最后, 最后一波人拿到需要再继续迭代时发现, 哪儿哪儿都是牵一发动全身, 无从下手, 改无可改.<br>即使你很牛逼, 花大力气大成本把代码质量控制的非常高, 因为是单项目, 那么只能单语言开发就是迈不过去的坎, 比如需要新加一个逻辑并不复杂后期扩展也不大的功能模块儿, 单因为项目本身是用的Java|.net, 你不得不放弃可能会更便捷的PHP.<br>还有人才方面, 早期Web服务开发Java和.net可以说是分庭抗礼, 可是到了现在Java在早期开源和跨平台的优势加持下, 已经完全碾压了.net, 假如当年你的项目语言是选择的.net, 现在招人可说是痛苦至极.</p>
+<h3 id="第三节-微服务的崛起"><a href="#第三节-微服务的崛起" class="headerlink" title="第三节 微服务的崛起"></a>第三节 微服务的崛起</h3><p>在上一节中提到各种问题的折磨下, 一种叫微服务的架构<strong>思想</strong>应运而生.<br>注意, 这里说的是微服务架构思想, 微服务并不是一种架构设计, 而是一种架构思想. 因为微服务的灵活, 所以运用这种思想, 我们可以有非常多的设计方式, 具体要怎样来设计, 这一切取决于我们将要实现的业务的特性. 而在传统架构设计中, 中间矩形内的功能可以替换成任何功能, 可以说也是万金油架构设计.<br>所以我这篇Blog的标题才声明了这是to C的电商类微服务架构设计.</p>
+<p>首先, 在这类业务中, 核心关键的主体应该是, 用户、商户、订单、库存, 所以我们还是只拿这四块儿来讨论, 其余可能还有商品、物流、支付等等, 自行往里套就可以了.<br>那么按照正常的服务垂直拆分法, 那么肯定应该拆分为用户服务、商户服务、订单服务以及库存服务.<br>这样拆分之后有什么问题呢?</p>
+<ul>
+<li>通信问题, 微服务间是肯定需要通信的, 不能像以前一样调个方法搞定了.</li>
+<li>分布式事务问题暨数据一致性问题, 微服务之间DB操作无法放在一个数据库事务中了.</li>
+</ul>
+<p>通信问题好解决, 无非是增加一个通信层来提供服务调用接口, 增加点儿工作量的问题.<br>主流的通信方式目前主要有REST over HTTP(S)、RPC(TCP)两种, 性能上因为RPC是基于TCP协议, 而HTTP(S)协议则在TCP之上, 所以自然RPC性能略强一点. 但是, HTTP(S)协议的规范性、通用性我们不能忽略, 这可以让我们管理更轻松同时不用担心开发语言的兼容性. 正是因为这几点, 目前一些RPC模式的开源项目也开始该用HTTP(S)协议或者兼容HTTP(S)协议, 例如gRPC和微软的Windows RPC over HTTP.<br>综上所述, 我的选择是REST over HTTP(S), 这样的选择无论是服务开发者还是服务调用者都可以轻松愉快.</p>
+<p>分布式事务问题就麻烦了, 比如这里的订单和库存, 当新增一个订单时, 库存自然也需要扣除订单里的商品的数量, 在传统架构设计中, 两个服务都在一个架构体系内, 在下单的方法或函数中直接可以调用扣除库存的方法或函数, 使之可以包含在同一个数据库事务中, 那么一旦哪里出现问题, 都可以完成回滚而不影响数据一致性. 可这时候订单和库存被我们拆分成了两个独立的服务, 所以不能享受同一个事务, 那么该如何来保证数据一致性呢? 首先我们先把逻辑梳理一遍, 搞清楚有哪些问题会影响数据一致性.<br>既然上面提到了服务之间通信使用HTTP(S)协议,<br>那么我们自然能想到HTTP(S)里面分为同步请求和异步请求两种, 当用户下单时, 自然是同步请求到订单服务, 因为要告知用户下单结果, 总不能异步请求, 然后靠推送告知用户下单结果, 那样体验自然是不佳的. 然后订单服务是否可以异步请求库存服务呢? 也不可以, 因为订单服务需要返回给用户下单结果, 而下单结果判断需要依赖库存服务返回的库存扣除结果, 在高并发环境下, 用户在选择商品时可能还是有库存的, 而确认下单时, 库存可能就已经没了, 例如一些秒杀活动, 所以这里也只能选择同步请求到库存服务, 库存服务检查库存确认支持本次扣除后完成扣返回结果或不能完成扣出返回结果, 订单服务根据返回的结果完成下单返回告知用户或返回结果告知用户售罄不能完成下单.<br>第一种情况, 库存服务发生未知异常, 无返回或HTTP(S)返回状态码非200.<br>这种情况订单服务无法判断库存服务是否已完成库存扣出, 因为不知道未知异常发生时库存服务是否已完成本地事务提交.<br>第二种情况, 请求库存服务超时.<br>这种情况订单服务依旧无法判断库存服务是否已完成库存扣出, 因为发生超时后又两种可能性, 有可能是库存服务连接数满拒绝服务, 也有可能是数据库出现慢SQL导致排队, 被拒绝服务则不会完成扣出, 而导致排队虽然请求超时, 但最后很可能完成扣出.</p>
+<p>第一种情况的解决办法当然就时让订单服务知道事务是否已经提交, 在执行过程中产生任何异常信息一律往上返回, 最终以类似<code>{error: 500, message: “兄弟我错了”, transaction_state: 1}</code>的形式返回给调用者(当然也可以直接约定错误码段来表示事务已提交, 但这样会增加调用者的学习成本和理解难度).<br>举例: 如果我们的需求中交易完成后需要通知用户服务增加积分, 并且返回当前积分余额, 使用乐观锁方式增加余额成功并已提交事务, 因为是使用乐观锁, 所以必然已经查询过积分余额, 事务提交后, 我们直接在程序中计算增加后的积分余额, 结果这里代码不谨慎发生了异常, 最后返回<code>{error: 500, message: “我傻逼了”, transaction_state: 1}</code>给支付服务, 支付服务得知已经增加积分完成, 但后来发成了异常, 则可以重新调用用户服务中查询积分的服务来补偿丢失的数据, 从而完成这次服务.<br>至于无任何返回, 如果是使用Tomcat、JBoss等Web容器在未宕机前提下肯定不会发生无返回的情况, 遇到异常会返回非200的状态码并附带异常信息, 如果是使用其他无容器的语言, 比如说Golong, 如果发生异常后被<code>panic</code>, 则会产生无返回的情况, 那么我们需要避免这样的情况发生, 避免在流程中使用<code>panic</code>, 在Golang的官方建议中也提到, 除非你知道你自己在干什么, 否则不要使用<code>panic</code>.</p>
+<p>第二种情况就要谈到一个微服务里一个很重要的术语, 幂等. 幂等是个数学名词, 听着好牛逼好高大上的样子, 其实通俗来讲很简单, 就是保证服务接口被重复调用时, 产生的结果或影响相同. 互联网早期玩论坛的用户肯定遇到过这样的情况, 那时候我们普遍都是小水管, 网速慢, 发一些长贴时点了确定后半天没反应, 然后我们就反复点确定, 结果发帖完成后返回列表时发现该板块已经被我们屠版了… 而幂等就是我们这次请求无论被提交多少次, 但是帖子只发一个. 如果我们的库存服务的扣除库存接口也实现了幂等的话, 订单服务就可以放心大胆的重试嘛, 超过指定重试次数以后告知用户失败就完事了, 如何实现库存服务的扣除库存接口的幂等呢, 无非要的结果就是在一次服务内你调用我多少次我都只执行一次, 那么我们就需要让我们的服务知道每次被调用是否是同一次服务, 所以就需要由我们的订单服务的下单接口定义一个Xid, 然后在调用库存服务的扣除库存接口时一起传递过来, 库存服务缓存这个ID及状态, 当扣除完成事务提交后立即更新此ID对应的状态, 最后返回结果. 每次接口被调用时, 先判断传入的Xid是否已存在, 当已存则说明上一次被调用已超时, 然后判断状态来得知扣除是否已经完成, 已完成则直接返回告知已完成, 未完成则返回告知订单服务请等待并为Xid对应更新一个重试次数(判断和更新重试次数在悲观锁中进行, 两个操作皆是内存操作, 所以不会对并发性能产生多少影响). 第一次服务请求终于执行完后判断重试次数是否已经打倒订单服务那边约定好的上限(这里依然使用悲观锁判断), 未达重试次数上限则提交本地事务, 等待下一次重试带回结果, 已达重试次数则回滚.<br>到这里, 虽然数据一致性问题被我们解决掉了, 但是可以看到, 对我们的业务代码侵入性非常大, 每一个接口的实现都需要增加大量为了保证数据一致性的代码, 降低开发效率不说, 还容易出错.<br>其实还有一种更优雅, 业务侵入几乎没有的方式来实现, TXC模式, 专业名词又来了, 好高大上好难理解有木有, 好吧, 简单来说就是SQL代理, 你们都把增删改的SQL给我, 我做为第三方来帮你们放在同一个事务内执行, 你们之间也解耦, 别在同步请求, 不用等对方返回, 统一由我来告诉你们结果.<br>具体逻辑是这样的, 订单服务的下单接口初始化一个全局唯一的Xid, 然后异步调用库存服务的扣除库存接口, 除了正常应该传入的参数外, 增加Xid的传入, 接着调用TXC, 传入Xid、insert 订单的SQL、依赖返回的接口的唯一标示暨库存服务的扣除库存接口的唯一标示, 自身接口唯一标示. 最后读取阻塞队列.<br>到库存服务的扣除库存接口里, 调用TXC时同上, 没有依赖返回的接口则留空. 最后读取阻塞队列.<br>TXC这边的原理是, 接到请求后以Xid为Key, 将调用者接口的唯一标示和其依赖的接口唯一标示存入缓存, 然后判断同一个Xid下其依赖的接口是否已经调用了TXC, 如果没有则结束本次请求(此时肯定没有). 等到库存服务的扣除库存接口调用TXC时, 同上, 根据Xid对应的依赖关系判断是否都已经调用TXC, 得到结果都已经调用, 开启事务执行SQl, 最后将结果写入队列.<br>在Java中有非常丰富的第三方开源资源可以使用, 无论是业务侵入多的TCC模式还是侵入量少的TXC模式, 都能很容易在GitHub上找到非常优质的开源资源, 其他语言可能就比较痛苦, 例如Golang, 我目前没有找到能够良好支持Golang的或者提供跨语言支持的开源分布式事务框架.</p>
+<h3 id="第三节-海量数据处理与存储"><a href="#第三节-海量数据处理与存储" class="headerlink" title="第三节 海量数据处理与存储"></a>第三节 海量数据处理与存储</h3><p>服务分好了, 只能算架构的一半弄好了, 还剩下最关键的数据库设计, 因为高并发往往意味着大数据, 如何接受这些数据以便提供高效的CRUD, 也是高并发高可用架构里需要绞尽脑汁的一环.<br>很多人觉得, 既然服务已经垂直拆分了, 数据库也垂直拆分呗, 这样不就分担了IO压力了么? 那我们来分析分析这样拆分给我们带来的到底是好还是坏.</p>
+<ul>
+<li>单表数据量过大问题并没有得到解决.</li>
+<li>再次面对数据库层面的分布式事务问题, 订单库存两个库如何保证数据一致性.</li>
+<li>Join连表查询的问题, 跨库无法直接使用Join方便的查询出我们想要的结果集.</li>
+</ul>
+<p>可见, 这样做一没有得到我们想要的, 二还会带来相当多的副作用. 完全的得不偿失.<br>所以对于我们最有利的还是水平分片法, 根据指定的规则, 将数据表进行水平分片, 例如根据时间分片、根据主键求模分片、根据字段取值范围分片等等. 依此将数据表分片成若干份, 根据需求放置不同的数据库中独享硬盘IO, 这样就解决了我们单表数据量过大的问题同时提升高并发性能. 不过这样好像依然给我们带来了上面提到的后两点副作用. 其实我们可以巧妙的利用分片规则, 从而也规避掉这两点副作用.</p>
+<p>首先我们要明确单表数据量控制在多少能获得最佳性能, 这个视业务所需查询复杂度而定, 一般取值在500W-800W之间, 而to C业务一般查询逻辑都不怎么复杂, 所以推荐选择800W, 再者to C电商需求要分两种情况, 一种是to C的O2O类电商需求, 一种是to C的线上电商需求.</p>
+<h4 id="先来说O2O类需求"><a href="#先来说O2O类需求" class="headerlink" title="先来说O2O类需求"></a>先来说O2O类需求</h4><p>既然是线上对线下, 那么我们的四个主体必然一定是在同一个地区, 很显然, 我们最佳的分片规则即是按照地区来完成, 再者考虑到高并发下分担IO压力的问题, 则建议同时分库, 这样就可以分别部署在独享硬盘或服务器上, 现在假设拆分成出了成都库、德阳库两个数据库, 再假设我们有<code>user</code>、<code>business</code>、<code>order</code>、<code>inventory</code>暨<code>用户</code>、<code>商户</code>、<code>订单</code>、<code>库存</code>四张表, 在这四张表中, 地区相对固定的是<code>商户</code>、<code>订单</code>、<code>库存</code>三张表, 所以我们对这三张表使用按地区分片的策略, <code>用户</code>表暂时放在一边, 如果某个地区发展特别好, 数据量依旧特别大了又怎么办呢? 所以分片规则不能只是根据地区, 而是地区范围, 在设计我们的地区字典表时, 地区的ID使用数字并且一个城市下的区县一定时连续的, 能够用范围来表示的, 例如: 1000-1100=CD, 可表示ID1000到1100的地区都是成都. 然后分片规则里用这样的范围规则来分片, 假设发展特别好的地区就是成都, 需要继续分片, 就可以这样1000-1010=cdjj、1011-1100=CD, 表示1000到1010的地区为锦江分片, 其他仍然是成都分片, 这样就把一个区单独拆分成一个分片, 然后将历史数据迁移到该新分片即可.<br>这样做的好处是, 可以永远保证同一个商户的订单和库存都存放在同一个分片库上, 那么使用join进行连表查询时则不需要多余的处理, 不存在跨库的问题.<br>但随着时间流逝订单数据量大的问题又来了, 这个时候订单就需要再增加一个分片规则, 按时间分片, 至于是按照年还是月甚至是小时, 还是按照单表数据量500W-800W原则来确定, 因为按地区分片已经分担了并发IO压力, 所以这里仅分表不用分库. </p>
+<p><code>用户</code>表的分片我们使用尽量平均的分片规则即可, 但这样做可以肯定无法控制用户数据和其订单数据存放在同一个分片上, 所以是否独立成库可根据并发量选择, 那么商户和用户需要查询历史订单怎么办呢? 商户的历史订单需要关联用户以显示用户昵称、电话等, 用户查询历史订单但订单却不在同一个分片表中, 很头疼吧. </p>
+<p>商家这边的解决办法就是单独分页查询出订单列表(假设10条), 然后拿到10个用户ID, 再多线程并发<code>id in ()</code>到所有用户分片查询, 用户表分片数据库量控制在800W以下in主键的效率可控制在10毫秒以内, 因为是并发查询所以时间也不会叠加, 而用户分片一般项目很难超过20个, 20个可就是20 &times; 800 = 1.6亿用户量了, 所以瞬间消耗线程数也就是20以内.<br>用户查询历史订单的话, 我们不用并发查询所有订单分片, 因为订单是按地区和时间分片的, 所以我们需要设定一个允许用户查历史订单的期限, 一般是一年(美团、饿了么皆限制一年), 这就确定了12个分片(假设订单按月分片), 如果地区分片规则颗粒度很大, 例如按省分片的话, 则可以完成并发查询进行分页, 不过占用线程数就是36 &times; 12, 仍然有点浪费, 最好的办法是再建立一张表记录一年内用户产生过订单的地区, 该表跟随用户表一起分片, 保证俩存放在一个分片上, 用户登陆时join一起查询来并缓存, 这样就可以完全确定历史订单所在分片, 并发查询即可. 这里你的地区分片颗粒度越细, 线程资源消耗越大, 所以颗粒度选择一定不是越小越好, 一切遵照500W-800W原则, 否则就是浪费, 同时也需要根据实际线程资源消耗情况选择服务器配置及对微服务进行集群负载均衡. </p>
+<h4 id="再来分析纯线上类的需求"><a href="#再来分析纯线上类的需求" class="headerlink" title="再来分析纯线上类的需求"></a>再来分析纯线上类的需求</h4><p>这里因为没有的地区属性, 所以我们可以执行使用平均分片的规则完成<code>商户</code>、<code>订单</code>、<code>库存</code>的分片, 但是考虑到上面提到过的Join问题, 所以不能这么简单, 正确的选择是仅<code>商户</code>使用平均分片的规则, <code>订单</code>、<code>库存</code>使用跟随分片规则, 跟随分片规则就是跟随<code>商户</code>进行分片, 加上ID为1的商户在0号分片, 那么订单和库存里跟商户Id为1绑定的数据也分片到0号分片, 这样即可保证同一个商户的订单和库存数据都存放在用一个分片库内, 继而解决join查询的问题.<br>另外<code>订单</code>当然还需根据时间再次分片, 考虑到纯线上的to C业务数据量做好了都会很夸张, 所以建议考虑按天分片, 可设置按指定天数分片, 初期可设置按30天甚至更多来分, 代码中实时监控数据量, 发现分片数据量超过警戒值后动态调整分片天数, 更加灵活应对波峰波谷(例如狂欢节什么的). 另外还建议按年对订单分片表进行归档, 不提供跨年的条件查询, 需要使用条件查询订单, 先选择年份, 避免查询需要的并发线程太大. 假设一年12亿个订单, 按800W一个分片算就是150个分片, 不按年归档3年下来一次查询就需要450个线程.</p>
+<p><code>用户</code>表的分片就个O2O的一样了, 商户查询订单列表需要关联用户的问题解决办法也是一样的, 有差别的就是用户查询历史订单了, 像淘宝目前是允许普通用户在自己所有订单里面进行搜索的,<br>而且个人感觉是非常有必要的, 因为O2O业务的商品一般是服务或者短质保期商品, 用户一般没有查询一年前订单的刚需, 而纯线上业务很可能存在几年以上质保期的商品, 那么用户搜索自己全部订单则变成了刚需功能, 否则无法获取售后服务. 可是几年下来<code>订单</code>表的总分片量可能非常大, 直接并发查询基本不可能, 所以只能再增加一张表来记录用户在<code>订单</code>的哪些分片上有订单, 该表同样跟随用户分片, 以此来减少并发查询量.</p>
+<h4 id="关于实现的建议"><a href="#关于实现的建议" class="headerlink" title="关于实现的建议"></a>关于实现的建议</h4><p>分析完数据库设计, 回过头来想想, 如果这些逻辑全部放在业务代码中去, 那么对业务编码人员的要求又是极高的, 所以最好依然是做成一个数据库中间件实现, 这样可以做到0业务侵入, 目前主流且相对容易一点的方式是自己实现一个所用语言的DB Driver替代你的数据库的DB Driver, 假设你使用的Java+Mysql, 那么你就拿jdbc-mysql.jar来改, 做成你自己的driver.jar. 如Insert SQL传过来之后, 在你的driver.jar中解析这句SQL, 应用分片规则得出应该插入哪个分片后, 在Insert到那个分片去.<br>当然, 也有开源的数据库中间件可以选择, 目前我自己测试使用感觉能用的只有Mycat, 但依然不能满足本文描述的架构设计, 不过好在开源, 而且是使用Java编写, 可以比较方便的进行无侵入或少量侵入的扩展.</p>
+<p>留个Mycat实战的传送门吧: <a href="https://veevv.com/2019/04/24/mycat-learning-exp/">Mycat数据库中间件上手实践及分布式事务和读写分离实现</a></p>
+<p>哦对了, 另外建议所有高查询热度的数据分片库都用主从同步实现一下读写分离, 进一步提高并发性能.<br>也留一个读写分离实战的传送门吧: <a href="https://veevv.com/2019/04/24/mysql_main_slave_config/">MySQL主从同步和读写分离配置及理解</a></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>不知不觉又写了怎么多了, 也算把这些年的思考一股脑全部记录下来了, 以后有新的思考应该还会继续更新, 毕竟性能优化这玩意儿既没有万金油更是无止无尽.<br>最后上一张总结性的结构图当作Ending吧. </p>
+<p><img src="https://veevv.com/images/posts/micro-service-architecture-to-c-desgin-2.png" alt="结构图"></p>
+<p>我真不信有人能认认真真从头看到这里😂！Thanks for your reading😁!</p>
+
+      
+    </div>
+    
+  </div>
+  
+    
+    <div class="copyright">
+        <p><span>本文标题:</span><a href="/2019/04/26/micro-service-architecture-to-c-desgin/">基于to C 电商业务的高并发高可用架构设计</a></p>
+        <p><span>文章作者:</span><a href="/" title="回到主页">Victor Jones</a></p>
+        <p><span>发布时间:</span>2019-04-26, 20:07:00</p>
+        <p><span>最后更新:</span>2019-04-30, 09:43:40</p>
+        <p>
+            <span>原始链接:</span><a class="post-url" href="/2019/04/26/micro-service-architecture-to-c-desgin/" title="基于to C 电商业务的高并发高可用架构设计">https://veevv.com/2019/04/26/micro-service-architecture-to-c-desgin/</a>
+            <span class="copy-path" data-clipboard-text="原文: https://veevv.com/2019/04/26/micro-service-architecture-to-c-desgin/　　作者: Victor Jones" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
+            <script> var clipboard = new Clipboard('.copy-path'); </script>
+        </p>
+        <p>
+            <span>许可协议:</span><i class="fa fa-creative-commons"></i> <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/" title="CC BY-NC-SA 4.0 International" target="_blank">"署名-非商用-相同方式共享 4.0"</a> 转载请保留原文链接及作者。
+        </p>
+    </div>
+
+
+
+    <nav id="article-nav">
+        
+        
+            <div id="article-nav-older" class="article-nav-title">
+                <a href="/2019/04/24/mycat-learning-exp/">
+                    Mycat数据库中间件上手实践及分布式事务和读写分离实现
+                </a>
+            </div>
+        
+    </nav>
+
+  
+</article>
+
+    <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#第一节-说明"><span class="toc-number">1.1.</span> <span class="toc-text">第一节 说明</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#第二节-了解过去"><span class="toc-number">1.2.</span> <span class="toc-text">第二节 了解过去</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#第三节-微服务的崛起"><span class="toc-number">1.3.</span> <span class="toc-text">第三节 微服务的崛起</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#第三节-海量数据处理与存储"><span class="toc-number">1.4.</span> <span class="toc-text">第三节 海量数据处理与存储</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#先来说O2O类需求"><span class="toc-number">1.4.1.</span> <span class="toc-text">先来说O2O类需求</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#再来分析纯线上类的需求"><span class="toc-number">1.4.2.</span> <span class="toc-text">再来分析纯线上类的需求</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#关于实现的建议"><span class="toc-number">1.4.3.</span> <span class="toc-text">关于实现的建议</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#总结"><span class="toc-number">2.</span> <span class="toc-text">总结</span></a></li></ol>
+</div>
+<style>
+    .left-col .switch-btn,
+    .left-col .switch-area {
+        display: none;
+    }
+</style>
+
+<input type="button" id="tocButton" value="隐藏目录" title="点击按钮隐藏或者显示文章目录">
+
+<script>
+    yiliaConfig.toc = ["隐藏目录", "显示目录", !!"false"];
+</script>
+
+
+
+    
+<div class="share">
+    
+        <div class="bdsharebuttonbox">
+            <a href="#" class="fa fa-twitter bds_twi" data-cmd="twi" title="分享到推特"></a>
+            <a href="#" class="fa fa-weibo bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a>
+            <a href="#" class="fa fa-qq bds_sqq" data-cmd="sqq" title="分享给 QQ 好友"></a>
+            <a href="#" class="fa fa-files-o bds_copy" data-cmd="copy" title="复制网址"></a>
+            <a href="#" class="fa fa fa-envelope-o bds_mail" data-cmd="mail" title="通过邮件分享"></a>
+            <a href="#" class="fa fa-weixin bds_weixin" data-cmd="weixin" title="生成文章二维码"></a>
+            <a href="#" class="fa fa-share-alt bds_more" data-cmd="more"></a>
+        </div>
+        <script>
+            window._bd_share_config={
+                "common":{"bdSnsKey":{},"bdText":"基于to C 电商业务的高并发高可用架构设计　| Victor’ Blog　","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"0","bdSize":"24"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='https://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];
+        </script>
+    
+
+    
+</div>
+
+
+
+
+
+
+
+    
+      <!-- 来必力City版安装代码 -->
+<div id="lv-container" data-id="city" data-uid="MTAyMC8zMDc1Ni83MzA4">
+	<script type="text/javascript">
+   (function(d, s) {
+       var j, e = d.getElementsByTagName(s)[0];
+
+       if (typeof LivereTower === 'function') { return; }
+
+       j = d.createElement(s);
+       j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+       j.async = true;
+
+       e.parentNode.insertBefore(j, e);
+   })(document, 'script');
+	</script>
+	<style>
+	#lv-container{
+	    margin:0 22px 0 24px;
+	}
+	</style>
+<noscript> 为正常使用来必力评论功能请激活JavaScript</noscript>
+</div>
+<!-- City版安装代码已完成 -->
+    
+
+
+
+
+    <div class="scroll" id="post-nav-button">
+        
+            <a href="/" title="回到主页"><i class="fa fa-home"></i></a>
+        
+
+        <a title="文章列表"><i class="fa fa-bars"></i><i class="fa fa-times"></i></a>
+
+        
+            <a href="/2019/04/24/mycat-learning-exp/" title="下一篇: Mycat数据库中间件上手实践及分布式事务和读写分离实现">
+                <i class="fa fa-angle-right"></i>
+            </a>
+        
+    </div>
+
+    <ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/04/26/micro-service-architecture-to-c-desgin/">基于to C 电商业务的高并发高可用架构设计</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/24/mycat-learning-exp/">Mycat数据库中间件上手实践及分布式事务和读写分离实现</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/24/mysql_main_slave_config/">MySQL主从同步和读写分离配置及理解</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/18/go-xormplus-exmaple-and-auto-transaction-impl/">Go语言ORM框架XORM上手实战及全自动事务托管实现(类似Spring)</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/13/go-gomybatis-learning-experience/">Go语言的ORM框架GoMybatis的学习经历</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/12/12/how-to-install-tensorflow-on-arm/">如何在arm板(cubieboard)上编译安装tensorflow</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/05/17/how-to-install-mysql5.7-by-yum/">CentOS7如何使用yum安装Mysql5.7</a></li><li class="post-list-item"><a class="post-list-link" href="/2017/03/17/flowable-modeler-integrate/">如何整合Flowable-modeler到自己的项目中</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/06/01/linux-centos-vsftp-configuration/">linux/centos中配置vsftp</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/02/27/java-map-generic-problem/">一个Map泛型的问题</a></li><li class="post-list-item"><a class="post-list-link" href="/2016/01/16/magazine-faq/">深坑浅坑集合</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/30/tomcat-multi-project-start-error/">使用tomcat部署多个项目时, 启动莫名其妙的错, schedulerFactory_Worker-1 memory leak.</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/25/linux-centos-jdk-installation/">linux/centos下安装如何安装JDK</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/12/25/tomcat-start-error-contextloaderlistener/">使用ContextLoaderListener监听tomcat启动时, tomcat启动报错.</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/10/26/double-eleven-get-coupon/">双十一优惠券 一次性全部领取</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/09/30/mybatis-mapper-xml-reloader/">Mybatis Mapper配置XML文件热加载实现</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/09/23/j2ee-faq/">java常见问题集合</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/09/23/spring-mvc-ajax-json-406/">Spring MVC 使用ajax请求json数据时出现406 Not Acceptable</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/07/27/tomcat-linux-auto-start/">linux中设置tomcat开机启动</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/07/14/common-code-memo/">常用语句备忘</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/07/10/touch.js-baidu-code/">touch.js 百度开源项目.</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/06/26/bootstrap-css/">bootstrap栅格布局样式备忘.</a></li><li class="post-list-item"><a class="post-list-link" href="/2015/06/24/my-first-blog/">我历经百般磨难, 命运各种坎坷的第一篇博文.</a></li></ul>
+
+
+
+
+    <script>
+        
+    </script>
+</div>
+      <footer id="footer">
+    <div class="outer">
+        <div id="footer-info">
+            <div class="footer-left">
+                <i class="fa fa-copyright"></i> 
+                2016-2019 Victor Jones
+            </div>
+            <div class="footer-right">
+                <a href="http://hexo.io/" target="_blank" title="快速、简洁且高效的博客框架">Hexo</a>  Theme <a href="https://github.com/MOxFIVE/hexo-theme-yelee" target="_blank" title="简而不减 Hexo 双栏博客主题  v3.5">Yelee</a> by MOxFIVE <i class="fa fa-heart animated infinite pulse"></i>
+            </div>
+        </div>
+        
+            <div class="visit">
+                
+                    <span id="busuanzi_container_site_pv" style="display:none">
+                        <span id="site-visit">本站到访数: 
+                            <span id="busuanzi_value_site_uv"></span>
+                        </span>
+                    </span>
+                
+                
+                    <span>, </span>
+                
+                
+                    <span id="busuanzi_container_page_pv" style="display:none">
+                        <span id="page-visit">本页阅读量: 
+                            <span id="busuanzi_value_page_pv"></span>
+                        </span>
+                    </span>
+                
+            </div>
+        
+    </div>
+</footer>
+    </div>
+    
+<script data-main="/js/main.js" src="//lib.baomitu.com/require.js/2.2.0/require.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            var iPad = window.navigator.userAgent.indexOf('iPad');
+            if (iPad > -1 || $(".left-col").css("display") === "none") {
+                var bgColorList = ["#9db3f4", "#414141", "#e5a859", "#f5dfc6", "#c084a0", "#847e72", "#cd8390", "#996731"];
+                var bgColor = Math.ceil(Math.random() * (bgColorList.length - 1));
+                $("body").css({"background-color": bgColorList[bgColor], "background-size": "cover"});
+            }
+            else {
+                var backgroundnum = 5;
+                var backgroundimg = "url(/background/bg-x.jpg)".replace(/x/gi, Math.ceil(Math.random() * backgroundnum));
+                $("body").css({"background": backgroundimg, "background-attachment": "fixed", "background-size": "cover"});
+            }
+        })
+    </script>
+
+
+
+
+<div class="scroll" id="scroll">
+    <a href="#" title="返回顶部"><i class="fa fa-arrow-up"></i></a>
+    <a href="#comments" onclick="load$hide();" title="查看评论"><i class="fa fa-comments-o"></i></a>
+    <a href="#footer" title="转到底部"><i class="fa fa-arrow-down"></i></a>
+</div>
+<script async src="https://busuanzi.ibruce.info//busuanzi/2.3/busuanzi.pure.mini.js">
+</script>
+  </div>
+</body>
+</html>
