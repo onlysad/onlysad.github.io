@@ -25,7 +25,7 @@
 <meta property="og:locale" content="default">
 <meta property="og:image" content="https://veevv.com/images/posts/micro-service-architecture-to-c-desgin-1.png">
 <meta property="og:image" content="https://veevv.com/images/posts/micro-service-architecture-to-c-desgin-2.png">
-<meta property="og:updated_time" content="2019-04-30T01:21:59.051Z">
+<meta property="og:updated_time" content="2019-04-30T01:23:03.809Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="基于to C 电商业务的高并发高可用架构设计">
 <meta name="twitter:description" content="前言最近一直在研究微服务的架构设计, 在研究技术的同时, 从免不了带入业务需求进行考虑, 否则仅凭性能也无法全面的评估这些设计的好坏, 想得多了, 自己都快记不住了, 觉得应该再开一篇博客记录下来, 说不定在记录的时候再次反思又能想到更多更深入更好玩儿的东西.当然, 如果能够帮助到其他为此困扰的人, 那也是极好的. 第一节 说明近期主要是拿to C 电商业务做为观察视角来研究架构设计, 那么核心的">
@@ -313,7 +313,9 @@
         <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>最近一直在研究微服务的架构设计, 在研究技术的同时, 从免不了带入业务需求进行考虑, 否则仅凭性能也无法全面的评估这些设计的好坏, 想得多了, 自己都快记不住了, 觉得应该再开一篇博客记录下来, 说不定在记录的时候再次反思又能想到更多更深入更好玩儿的东西.<br>当然, 如果能够帮助到其他为此困扰的人, 那也是极好的.</p>
 <h3 id="第一节-说明"><a href="#第一节-说明" class="headerlink" title="第一节 说明"></a>第一节 说明</h3><p>近期主要是拿to C 电商业务做为观察视角来研究架构设计, 那么核心的设计观点自然也主要围绕此展开.</p>
 <p><strong>另外需要提前强调, 直到本文结束宣布结果前, 都只是思维推导的过程, 切勿片面取之.</strong></p>
-<h3 id="第二节-了解过去"><a href="#第二节-了解过去" class="headerlink" title="第二节 了解过去"></a>第二节 了解过去</h3><p>首先我们先来看一张传统架构的设计图.<br><img src="https://veevv.com/images/posts/micro-service-architecture-to-c-desgin-1.png" alt="结构图"><br><a id="more"></a><br>这是一种最经典的设计, 被使用了几十年的设计.<br>这种架构在功能上进行了分包, 所以虽然是提供整体服务, 但是内部功能模块依然是相对清晰的.<br>所以无论是前期设计和开发, 还是后期的迭代和维护, 因为都在一个项目中而变的简单方便.<br>在互联网发展早期, 也就是我们刚开始玩梦幻西游和魔兽世界的时代, 有谁会去知道高并发、高可用、负载均衡这些词汇? 在那个家里有电脑就是大土豪的时代, 做架构设计的人们根本不用考虑这些东西. 可是到了如今, 问题来了.</p>
+<h3 id="第二节-了解过去"><a href="#第二节-了解过去" class="headerlink" title="第二节 了解过去"></a>第二节 了解过去</h3><a id="more"></a>
+<p>首先我们先来看一张传统架构的设计图.<br><img src="https://veevv.com/images/posts/micro-service-architecture-to-c-desgin-1.png" alt="结构图"></p>
+<p>这是一种最经典的设计, 被使用了几十年的设计.<br>这种架构在功能上进行了分包, 所以虽然是提供整体服务, 但是内部功能模块依然是相对清晰的.<br>所以无论是前期设计和开发, 还是后期的迭代和维护, 因为都在一个项目中而变的简单方便.<br>在互联网发展早期, 也就是我们刚开始玩梦幻西游和魔兽世界的时代, 有谁会去知道高并发、高可用、负载均衡这些词汇? 在那个家里有电脑就是大土豪的时代, 做架构设计的人们根本不用考虑这些东西. 可是到了如今, 问题来了.</p>
 <p>3G4G的普及, 让中国人直接跳过了个人电脑普及的阶段, 直接进入移动互联网时代. 从互联网发展了近10年才有的两亿网民, 两三年就翻到了五六亿, 到18年更是夸张到突破八亿.</p>
 <p>传统的架构设计在这样的环境下就开始显得捉襟见肘, 即使上集群, 同时接受请求量起来了, 数据库也处理不过来, 即使数据也上集群了, 动不动单表过千万的数据量也会让随便一个查询就把硬盘IO和CPU占满.<br>所以, 很多时候经典往往也代表着过时.</p>
 <p>当然, 过时的原因也不仅仅只有上述这一点.<br>很多采用这种架构设计的项目经过数年的发展, 每一个功能都经过了两三个人的手, 甚至有的功能还要多得多, 其中总会有一些没有完全搞清楚状况的人写的一些代码, 而往往就是这些代码极大增强了功能模块与功能模块之间的耦合性. 最后, 最后一波人拿到需要再继续迭代时发现, 哪儿哪儿都是牵一发动全身, 无从下手, 改无可改.<br>即使你很牛逼, 花大力气大成本把代码质量控制的非常高, 因为是单项目, 那么只能单语言开发就是迈不过去的坎, 比如需要新加一个逻辑并不复杂后期扩展也不大的功能模块儿, 单因为项目本身是用的Java|.net, 你不得不放弃可能会更便捷的PHP.<br>还有人才方面, 早期Web服务开发Java和.net可以说是分庭抗礼, 可是到了现在Java在早期开源和跨平台的优势加持下, 已经完全碾压了.net, 假如当年你的项目语言是选择的.net, 现在招人可说是痛苦至极.</p>
@@ -357,7 +359,7 @@
         <p><span>本文标题:</span><a href="/2019/04/24/micro-service-architecture-to-c-desgin/">基于to C 电商业务的高并发高可用架构设计</a></p>
         <p><span>文章作者:</span><a href="/" title="回到主页">Victor Jones</a></p>
         <p><span>发布时间:</span>2019-04-24, 21:21:00</p>
-        <p><span>最后更新:</span>2019-04-30, 09:21:59</p>
+        <p><span>最后更新:</span>2019-04-30, 09:23:03</p>
         <p>
             <span>原始链接:</span><a class="post-url" href="/2019/04/24/micro-service-architecture-to-c-desgin/" title="基于to C 电商业务的高并发高可用架构设计">https://veevv.com/2019/04/24/micro-service-architecture-to-c-desgin/</a>
             <span class="copy-path" data-clipboard-text="原文: https://veevv.com/2019/04/24/micro-service-architecture-to-c-desgin/　　作者: Victor Jones" title="点击复制文章链接"><i class="fa fa-clipboard"></i></span>
